@@ -50,6 +50,9 @@ class DocumentBuilder(object):
             self.add_footnotes(doc, element)
             index += 1
 
+    def save(self, filename):
+        self.doc.save(filename)
+
     def add_images(self, doc, element):
         """Add images from the given document used in the given element."""
         blips = element.findall(
