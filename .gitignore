@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+*$py.class
+
+.Python
+bin/
+include/
+lib/
+*.egg-info/
+pip-selfcheck.json
