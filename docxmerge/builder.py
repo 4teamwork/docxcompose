@@ -22,23 +22,33 @@ class DocumentBuilder(object):
         self.doc = doc
         self.pkg = doc.part.package
 
+        self.reset_reference_mapping()
+
+    def reset_reference_mapping(self):
         self.num_id_mapping = {}
+
+    def append(self, doc):
+        """Append the given document."""
+        self.reset_reference_mapping()
+        for element in doc.element.body:
+            element = deepcopy(element)
+            self.doc.element.body.append(element)
+            self.add_styles(doc, element)
+            self.add_numberings(doc, element)
+            self.add_images(doc, element)
+            self.add_footnotes(doc, element)
 
     def insert(self, index, doc):
         """Insert the given document at the given index."""
-        self.num_id_mapping = {}
+        self.reset_reference_mapping()
         for element in doc.element.body:
-            self.insert_element(index, element, doc)
+            element = deepcopy(element)
+            self.doc.element.body.insert(index, element)
+            self.add_styles(doc, element)
+            self.add_numberings(doc, element)
+            self.add_images(doc, element)
+            self.add_footnotes(doc, element)
             index += 1
-
-    def insert_element(self, index, element, doc):
-        """Insert element from doc at index."""
-        element = deepcopy(element)
-        self.doc.element.body.insert(index, element)
-        self.add_styles(doc, element)
-        self.add_numberings(doc, element)
-        self.add_images(doc, element)
-        self.add_footnotes(doc, element)
 
     def add_images(self, doc, element):
         """Add images from the given document used in the given element."""
