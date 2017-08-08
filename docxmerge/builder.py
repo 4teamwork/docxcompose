@@ -6,6 +6,7 @@ from docx.opc.packuri import PackURI
 from docx.oxml import parse_xml
 from docx.parts.numbering import NumberingPart
 import os.path
+import random
 
 NS = {
     'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
@@ -148,6 +149,12 @@ class DocumentBuilder(object):
             anum_id.val = next_anum_id
             # anum_element.abstractNumId = next_anum_id
             anum_element.set('{%s}abstractNumId' % NS['w'], str(next_anum_id))
+
+            # Make sure we have a unique nsid so numberings restart properly
+            nsid = anum_element.find('.//w:nsid', NS)
+            nsid.set(
+                '{%s}val' % NS['w'],
+                "{0:0{1}X}".format(random.randint(0, 0xffffffff), 8))
 
             # Find position of first <w:num> element
             nums = numbering_part.element.xpath('.//w:num')
