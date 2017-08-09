@@ -137,11 +137,21 @@ class DocumentBuilder(object):
         for num_id in num_ids:
             if num_id in self.num_id_mapping:
                 continue
-            num_element = deepcopy(src_numbering_part.element.xpath(
-                './/w:num[@w:numId="%s"]' % num_id)[0])
+
+            # Find the referenced <w:num> element
+            res = src_numbering_part.element.xpath(
+                './/w:num[@w:numId="%s"]' % num_id)
+            if not res:
+                continue
+            num_element = deepcopy(res[0])
             anum_id = num_element.xpath('//w:abstractNumId')[0]
-            anum_element = deepcopy(src_numbering_part.element.xpath(
-                './/w:abstractNum[@w:abstractNumId="%s"]' % anum_id.val)[0])
+
+            # Find the referenced <w:abstractNum> element
+            res = src_numbering_part.element.xpath(
+                './/w:abstractNum[@w:abstractNumId="%s"]' % anum_id.val)
+            if not res:
+                continue
+            anum_element = deepcopy(res[0])
 
             self.num_id_mapping[num_id] = next_num_id
 
@@ -169,7 +179,8 @@ class DocumentBuilder(object):
 
         # Fix references
         for num_id_ref in element.xpath('.//w:numId'):
-            num_id_ref.val = self.num_id_mapping[num_id_ref.val]
+            num_id_ref.val = self.num_id_mapping.get(
+                num_id_ref.val, num_id_ref.val)
 
     def numbering_part(self):
         """The numbering part of the document."""
