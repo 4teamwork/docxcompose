@@ -4,7 +4,9 @@ from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from docx.opc.oxml import serialize_part_xml
 from docx.opc.packuri import PackURI
 from docx.oxml import parse_xml
+from docx.oxml.section import CT_SectPr
 from docx.parts.numbering import NumberingPart
+
 import os.path
 import random
 
@@ -31,13 +33,17 @@ class DocumentBuilder(object):
     def append(self, doc):
         """Append the given document."""
         self.reset_reference_mapping()
+        index = self.append_index()
         for element in doc.element.body:
+            if isinstance(element, CT_SectPr):
+                continue
             element = deepcopy(element)
-            self.doc.element.body.append(element)
+            self.doc.element.body.insert(index, element)
             self.add_styles(doc, element)
             self.add_numberings(doc, element)
             self.add_images(doc, element)
             self.add_footnotes(doc, element)
+            index += 1
 
     def insert(self, index, doc):
         """Insert the given document at the given index."""
@@ -53,6 +59,12 @@ class DocumentBuilder(object):
 
     def save(self, filename):
         self.doc.save(filename)
+
+    def append_index(self):
+        section_props = self.doc.element.body.xpath('w:sectPr')
+        if section_props:
+            return self.doc.element.body.index(section_props[0])
+        return len(self.doc.element.body)
 
     def add_images(self, doc, element):
         """Add images from the given document used in the given element."""
