@@ -43,6 +43,7 @@ class DocumentBuilder(object):
             self.add_numberings(doc, element)
             self.add_images(doc, element)
             self.add_footnotes(doc, element)
+            self.add_hyperlinks(doc, element)
             index += 1
 
     def insert(self, index, doc):
@@ -211,3 +212,16 @@ class DocumentBuilder(object):
                 partname, content_type, element, self.doc.part.package)
             self.doc.part.relate_to(numbering_part, RT.NUMBERING)
         return numbering_part
+
+    def add_hyperlinks(self, doc, element):
+        """Add hyperlinks from the given document used in the given element."""
+        hyperlink_refs = element.xpath('.//w:hyperlink')
+        for hyperlink_ref in hyperlink_refs:
+            rid = hyperlink_ref.get('{%s}id' % NS['r'])
+            if rid is None:
+                continue
+            rel = doc.part.rels[rid]
+            if rel.is_external:
+                new_rid = self.doc.part.rels.get_or_add_ext_rel(
+                    rel.reltype, rel.target_ref)
+                hyperlink_ref.set('{%s}id' % NS['r'], new_rid)
