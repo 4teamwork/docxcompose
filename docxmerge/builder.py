@@ -6,6 +6,7 @@ from docx.opc.packuri import PackURI
 from docx.oxml import parse_xml
 from docx.oxml.section import CT_SectPr
 from docx.parts.numbering import NumberingPart
+from StringIO import StringIO
 
 import os.path
 import random
@@ -75,8 +76,9 @@ class DocumentBuilder(object):
         for blip in blips:
             rid = blip.get('{%s}embed' % NS['r'])
             img_part = doc.part.rels[rid].target_part
-            self.pkg.image_parts.append(img_part)
-            new_rid = self.doc.part.relate_to(img_part, RT.IMAGE)
+            new_img_part = self.pkg.image_parts.get_or_add_image_part(
+                StringIO(img_part._blob))
+            new_rid = self.doc.part.relate_to(new_img_part, RT.IMAGE)
             blip.set('{%s}embed' % NS['r'], new_rid)
 
     def add_footnotes(self, doc, element):
