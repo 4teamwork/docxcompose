@@ -5,6 +5,7 @@ from docx.opc.oxml import serialize_part_xml
 from docx.opc.packuri import PackURI
 from docx.oxml import parse_xml
 from docx.oxml.section import CT_SectPr
+from docx.oxml.xmlchemy import BaseOxmlElement
 from docx.parts.numbering import NumberingPart
 from StringIO import StringIO
 
@@ -115,8 +116,8 @@ class DocumentBuilder(object):
     def add_styles(self, doc, element):
         """Add styles from the given document used in the given element."""
         our_style_ids = [s.style_id for s in self.doc.styles]
-        used_style_ids = [e.val for e in element.xpath(
-            './/w:tblStyle|.//w:pStyle|.//w:rStyle')]
+        used_style_ids = [e.val for e in xpath(
+            element, './/w:tblStyle|.//w:pStyle|.//w:rStyle')]
         for style_id in used_style_ids:
             if style_id not in our_style_ids:
                 style_element = doc.styles.element.get_by_id(style_id)
@@ -126,7 +127,7 @@ class DocumentBuilder(object):
         """Add numberings from the given document used in the given element."""
 
         # Search for numbering references
-        num_ids = set([n.val for n in element.xpath('.//w:numId')])
+        num_ids = set([n.val for n in xpath(element, './/w:numId')])
         if not num_ids:
             return
 
@@ -193,7 +194,7 @@ class DocumentBuilder(object):
             numbering_part.element.append(num_element)
 
         # Fix references
-        for num_id_ref in element.xpath('.//w:numId'):
+        for num_id_ref in xpath(element, './/w:numId'):
             num_id_ref.val = self.num_id_mapping.get(
                 num_id_ref.val, num_id_ref.val)
 
@@ -217,7 +218,7 @@ class DocumentBuilder(object):
 
     def add_hyperlinks(self, doc, element):
         """Add hyperlinks from the given document used in the given element."""
-        hyperlink_refs = element.xpath('.//w:hyperlink')
+        hyperlink_refs = xpath(element, './/w:hyperlink')
         for hyperlink_ref in hyperlink_refs:
             rid = hyperlink_ref.get('{%s}id' % NS['r'])
             if rid is None:
@@ -227,3 +228,15 @@ class DocumentBuilder(object):
                 new_rid = self.doc.part.rels.get_or_add_ext_rel(
                     rel.reltype, rel.target_ref)
                 hyperlink_ref.set('{%s}id' % NS['r'], new_rid)
+
+
+def xpath(element, xpath_str):
+    """Performs an XPath query on the given element and returns all matching
+       elements.
+       Works with lxml.etree._Element and with
+       docx.oxml.xmlchemy.BaseOxmlElement elements.
+    """
+    if isinstance(element, BaseOxmlElement):
+        return element.xpath(xpath_str)
+    else:
+        return element.xpath(xpath_str, namespaces=NS)
