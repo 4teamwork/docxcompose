@@ -7,7 +7,7 @@ from docx.oxml import parse_xml
 from docx.oxml.section import CT_SectPr
 from docx.oxml.xmlchemy import BaseOxmlElement
 from docx.parts.numbering import NumberingPart
-from StringIO import StringIO
+from docxmerge.image import ImageWrapper
 
 import os.path
 import random
@@ -77,8 +77,12 @@ class DocumentBuilder(object):
         for blip in blips:
             rid = blip.get('{%s}embed' % NS['r'])
             img_part = doc.part.rels[rid].target_part
-            new_img_part = self.pkg.image_parts.get_or_add_image_part(
-                StringIO(img_part._blob))
+
+            new_img_part = self.pkg.image_parts._get_by_sha1(img_part.sha1)
+            if new_img_part is None:
+                image = ImageWrapper(img_part)
+                new_img_part = self.pkg.image_parts._add_image_part(image)
+
             new_rid = self.doc.part.relate_to(new_img_part, RT.IMAGE)
             blip.set('{%s}embed' % NS['r'], new_rid)
 
