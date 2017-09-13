@@ -1,0 +1,5 @@
+recursive-include docxcompose *
+recursive-include docs *
+include *
+global-exclude *.pyc
+exclude pip-selfcheck.json
