@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.0.0a1 (unreleased)
+1.0.0a1 (2017-09-13)
 --------------------
 
 - Initial release
