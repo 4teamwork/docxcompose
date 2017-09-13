@@ -7,7 +7,7 @@ from docx.oxml import parse_xml
 from docx.oxml.section import CT_SectPr
 from docx.oxml.xmlchemy import BaseOxmlElement
 from docx.parts.numbering import NumberingPart
-from docxmerge.image import ImageWrapper
+from docxcompose.image import ImageWrapper
 
 import os.path
 import random
@@ -21,7 +21,7 @@ NS = {
 }
 
 
-class DocumentBuilder(object):
+class Composer(object):
 
     def __init__(self, doc):
         self.doc = doc

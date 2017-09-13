@@ -9,9 +9,9 @@ tests_require = [
 ]
 
 setup(
-    name='docxmerge',
+    name='docxcompose',
     version='1.0a1',
-    description="Combine .docx documents",
+    description="Compose .docx documents",
     long_description="",
     # Get more from https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
@@ -20,7 +20,7 @@ setup(
         "Operating System :: OS Independent",
         "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
     ],
-    keywords='Python DOCX Word',
+    keywords='Python DOCX Word OOXML',
     author='Thomas Buchberger',
     author_email='t.buchberger@4teamwork.ch',
     url='https://github.com/4teamwork/docxmerge',
