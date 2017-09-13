@@ -12,7 +12,8 @@ setup(
     name='docxcompose',
     version='1.0a1',
     description="Compose .docx documents",
-    long_description="",
+    long_description=(open("README.rst").read() + "\n" +
+                      open("HISTORY.txt").read()),
     # Get more from https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
         "Programming Language :: Python",
