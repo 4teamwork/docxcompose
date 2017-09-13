@@ -1,5 +1,5 @@
 
-*docxmerge* is a Python library for concatenating/appending Microsoft
+*docxcompose* is a Python library for concatenating/appending Microsoft
 Word (.docx) files.
 
 
@@ -10,10 +10,10 @@ Append a document to another document:
 
 .. code::
 
-    from docxmerge.builder import DocumentBuilder
+    from docxcompose.composer import Composer
     from docx import Document
     master = Document("master.docx")
-    builder = DocumentBuilder(master)
+    composer = Composer(master)
     doc1 = Document("doc1.docx")
-    builder.append(doc1)
-    builder.save("combined.docx")
+    composer.append(doc1)
+    composer.save("combined.docx")

@@ -23,7 +23,7 @@ setup(
     keywords='Python DOCX Word OOXML',
     author='Thomas Buchberger',
     author_email='t.buchberger@4teamwork.ch',
-    url='https://github.com/4teamwork/docxmerge',
+    url='https://github.com/4teamwork/docxcompose',
     license='GPL version 2',
     packages=find_packages(exclude=['ez_setup']),
     include_package_data=True,
