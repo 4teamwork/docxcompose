@@ -120,8 +120,8 @@ class Composer(object):
     def add_styles(self, doc, element):
         """Add styles from the given document used in the given element."""
         our_style_ids = [s.style_id for s in self.doc.styles]
-        used_style_ids = [e.val for e in xpath(
-            element, './/w:tblStyle|.//w:pStyle|.//w:rStyle')]
+        used_style_ids = set([e.val for e in xpath(
+            element, './/w:tblStyle|.//w:pStyle|.//w:rStyle')])
         for style_id in used_style_ids:
             if style_id not in our_style_ids:
                 style_element = doc.styles.element.get_by_id(style_id)
