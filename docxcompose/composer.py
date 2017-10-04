@@ -3,6 +3,7 @@ from docx.opc.constants import CONTENT_TYPE as CT
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from docx.opc.oxml import serialize_part_xml
 from docx.opc.packuri import PackURI
+from docx.opc.part import Part
 from docx.oxml import parse_xml
 from docx.oxml.section import CT_SectPr
 from docx.oxml.xmlchemy import BaseOxmlElement
@@ -45,7 +46,7 @@ class Composer(object):
             self.add_numberings(doc, element)
             self.add_images(doc, element)
             self.add_footnotes(doc, element)
-            self.add_hyperlinks(doc, element)
+            self.add_hyperlinks(doc.part, self.doc.part, element)
             index += 1
 
     def insert(self, index, doc):
@@ -94,18 +95,11 @@ class Composer(object):
             return
 
         footnote_part = doc.part.rels.part_with_reltype(RT.FOOTNOTES)
-        try:
-            doc_footnote_part = self.doc.part.rels.part_with_reltype(RT.FOOTNOTES)
-        except KeyError:
-            doc_footnote_part = deepcopy(footnote_part)
-            self.doc.part.relate_to(doc_footnote_part, RT.FOOTNOTES)
-            footnotes = parse_xml(doc_footnote_part.blob)
-            for footnote in footnotes[2:]:
-                footnotes.remove(footnote)
-            doc_footnote_part._blob = serialize_part_xml(footnotes)
 
-        footnotes = parse_xml(doc_footnote_part.blob)
-        next_id = len(footnotes) - 1
+        my_footnote_part = self.footnote_part()
+
+        footnotes = parse_xml(my_footnote_part.blob)
+        next_id = len(footnotes) + 1
 
         for ref in footnotes_refs:
             id_ = ref.get('{%s}id' % NS['w'])
@@ -113,9 +107,28 @@ class Composer(object):
             footnote = deepcopy(element.find('.//w:footnote[@w:id="%s"]' % id_, NS))
             footnotes.append(footnote)
             footnote.set('{%s}id' % NS['w'], str(next_id))
+            ref.set('{%s}id' % NS['w'], str(next_id))
             next_id += 1
+            self.add_hyperlinks(footnote_part, my_footnote_part, element)
 
-        doc_footnote_part._blob = serialize_part_xml(footnotes)
+        my_footnote_part._blob = serialize_part_xml(footnotes)
+
+    def footnote_part(self):
+        """The footnote part of the document."""
+        try:
+            footnote_part = self.doc.part.rels.part_with_reltype(RT.FOOTNOTES)
+        except KeyError:
+            # Create a new empty footnotes part
+            partname = PackURI('/word/footnotes.xml')
+            content_type = CT.WML_FOOTNOTES
+            xml_path = os.path.join(
+                os.path.dirname(__file__), 'templates', 'footnotes.xml')
+            with open(xml_path, 'rb') as f:
+                xml_bytes = f.read()
+            footnote_part = Part(
+                partname, content_type, xml_bytes, self.doc.part.package)
+            self.doc.part.relate_to(footnote_part, RT.FOOTNOTES)
+        return footnote_part
 
     def add_styles(self, doc, element):
         """Add styles from the given document used in the given element."""
@@ -220,16 +233,16 @@ class Composer(object):
             self.doc.part.relate_to(numbering_part, RT.NUMBERING)
         return numbering_part
 
-    def add_hyperlinks(self, doc, element):
-        """Add hyperlinks from the given document used in the given element."""
+    def add_hyperlinks(self, src_part, dst_part, element):
+        """Add hyperlinks from src_part referenced in element to dst_part."""
         hyperlink_refs = xpath(element, './/w:hyperlink')
         for hyperlink_ref in hyperlink_refs:
             rid = hyperlink_ref.get('{%s}id' % NS['r'])
             if rid is None:
                 continue
-            rel = doc.part.rels[rid]
+            rel = src_part.rels[rid]
             if rel.is_external:
-                new_rid = self.doc.part.rels.get_or_add_ext_rel(
+                new_rid = dst_part.rels.get_or_add_ext_rel(
                     rel.reltype, rel.target_ref)
                 hyperlink_ref.set('{%s}id' % NS['r'], new_rid)
 
