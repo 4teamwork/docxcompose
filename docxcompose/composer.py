@@ -6,20 +6,13 @@ from docx.opc.packuri import PackURI
 from docx.opc.part import Part
 from docx.oxml import parse_xml
 from docx.oxml.section import CT_SectPr
-from docx.oxml.xmlchemy import BaseOxmlElement
 from docx.parts.numbering import NumberingPart
 from docxcompose.image import ImageWrapper
+from docxcompose.utils import xpath
+from docxcompose.utils import NS
 
 import os.path
 import random
-
-NS = {
-    'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
-    'wp': 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing',
-    'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
-    'pic': 'http://schemas.openxmlformats.org/drawingml/2006/picture',
-    'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
-}
 
 
 class Composer(object):
@@ -245,15 +238,3 @@ class Composer(object):
                 new_rid = dst_part.rels.get_or_add_ext_rel(
                     rel.reltype, rel.target_ref)
                 hyperlink_ref.set('{%s}id' % NS['r'], new_rid)
-
-
-def xpath(element, xpath_str):
-    """Performs an XPath query on the given element and returns all matching
-       elements.
-       Works with lxml.etree._Element and with
-       docx.oxml.xmlchemy.BaseOxmlElement elements.
-    """
-    if isinstance(element, BaseOxmlElement):
-        return element.xpath(xpath_str)
-    else:
-        return element.xpath(xpath_str, namespaces=NS)
