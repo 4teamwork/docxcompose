@@ -8,8 +8,9 @@ from docx.oxml import parse_xml
 from docx.oxml.section import CT_SectPr
 from docx.parts.numbering import NumberingPart
 from docxcompose.image import ImageWrapper
-from docxcompose.utils import xpath
+from docxcompose.properties import CustomProperties
 from docxcompose.utils import NS
+from docxcompose.utils import xpath
 
 import os.path
 import random
@@ -28,8 +29,18 @@ class Composer(object):
 
     def append(self, doc):
         """Append the given document."""
-        self.reset_reference_mapping()
         index = self.append_index()
+        self.insert(index, doc)
+
+    def insert(self, index, doc):
+        """Insert the given document at the given index."""
+        self.reset_reference_mapping()
+
+        # Remove custom property fields but keep the values
+        cprops = CustomProperties(doc)
+        for name in cprops.dict().keys():
+            cprops.remove_field(name)
+
         for element in doc.element.body:
             if isinstance(element, CT_SectPr):
                 continue
@@ -40,18 +51,6 @@ class Composer(object):
             self.add_images(doc, element)
             self.add_footnotes(doc, element)
             self.add_hyperlinks(doc.part, self.doc.part, element)
-            index += 1
-
-    def insert(self, index, doc):
-        """Insert the given document at the given index."""
-        self.reset_reference_mapping()
-        for element in doc.element.body:
-            element = deepcopy(element)
-            self.doc.element.body.insert(index, element)
-            self.add_styles(doc, element)
-            self.add_numberings(doc, element)
-            self.add_images(doc, element)
-            self.add_footnotes(doc, element)
             index += 1
 
     def save(self, filename):
