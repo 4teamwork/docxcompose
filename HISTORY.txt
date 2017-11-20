@@ -5,7 +5,8 @@ Changelog
 1.0.0a3 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- Make removal of property fields optional.
+  [buchi]
 
 
 1.0.0a2 (2017-11-06)

@@ -27,19 +27,20 @@ class Composer(object):
     def reset_reference_mapping(self):
         self.num_id_mapping = {}
 
-    def append(self, doc):
+    def append(self, doc, remove_property_fields=True):
         """Append the given document."""
         index = self.append_index()
-        self.insert(index, doc)
+        self.insert(index, doc, remove_property_fields=remove_property_fields)
 
-    def insert(self, index, doc):
+    def insert(self, index, doc, remove_property_fields=True):
         """Insert the given document at the given index."""
         self.reset_reference_mapping()
 
         # Remove custom property fields but keep the values
-        cprops = CustomProperties(doc)
-        for name in cprops.dict().keys():
-            cprops.remove_field(name)
+        if remove_property_fields:
+            cprops = CustomProperties(doc)
+            for name in cprops.dict().keys():
+                cprops.remove_field(name)
 
         for element in doc.element.body:
             if isinstance(element, CT_SectPr):
