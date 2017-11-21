@@ -12,11 +12,20 @@ class CustomProperties(object):
     """
     def __init__(self, doc):
         self.doc = doc
-        part = doc.part.package.part_related_by(RT.CUSTOM_PROPERTIES)
-        self._element = parse_xml(part.blob)
+        self._element = None
+
+        try:
+            part = doc.part.package.part_related_by(RT.CUSTOM_PROPERTIES)
+        except KeyError:
+            pass
+        else:
+            self._element = parse_xml(part.blob)
 
     def dict(self):
         """Returns a dict with all custom doc properties"""
+        if not self._element:
+            return dict()
+
         props = xpath(self._element, './/cp:property')
         return {prop.get('name'): prop[0].text for prop in props}
 
