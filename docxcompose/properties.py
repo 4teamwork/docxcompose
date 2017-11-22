@@ -61,7 +61,7 @@ class CustomProperties(object):
         elif isinstance(value, datetime):
             value = value.strftime('%x')
         else:
-            value = str(value)
+            value = unicode(value)
 
         # Simple field
         sfield = xpath(
