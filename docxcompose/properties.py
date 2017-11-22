@@ -59,7 +59,7 @@ class CustomProperties(object):
         if isinstance(value, bool):
             value = 'Y' if value else 'N'
         elif isinstance(value, datetime):
-            value = datetime.strftime('%x')
+            value = value.strftime('%x')
         else:
             value = str(value)
 
