@@ -48,6 +48,11 @@ class CustomProperties(object):
             elif value.tag.endswith('}filetime'):
                 return CT_CoreProperties._parse_W3CDTF_to_datetime(value.text)
 
+    def update_all(self):
+        """Update all the document's doc-properties."""
+        for name in self.dict().keys():
+            self.update(name)
+
     def update(self, name):
         """Update a property field value."""
         value = self.get(name)
