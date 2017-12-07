@@ -128,10 +128,26 @@ class Composer(object):
         our_style_ids = [s.style_id for s in self.doc.styles]
         used_style_ids = set([e.val for e in xpath(
             element, './/w:tblStyle|.//w:pStyle|.//w:rStyle')])
+        # Style ids are language-specific, but names not, WTF?
+        # The inserted document may have another language than the composed one.
+        # Thus we lookup the style id using the style name.
+        doc_style_ids2names = {s.style_id: s.name for s in doc.styles}
+        our_style_names2ids = {s.name: s.style_id for s in self.doc.styles}
+
         for style_id in used_style_ids:
-            if style_id not in our_style_ids:
+            our_style_id = our_style_names2ids.get(doc_style_ids2names[style_id])
+            if our_style_id not in our_style_ids:
                 style_element = doc.styles.element.get_by_id(style_id)
                 self.doc.styles.element.append(deepcopy(style_element))
+            # Replace language-specific style id with our style id
+            if our_style_id != style_id and our_style_id is not None:
+                style_elements = xpath(
+                    element,
+                    './/w:tblStyle[@w:val="%(styleid)s"]|'
+                    './/w:pStyle[@w:val="%(styleid)s"]|'
+                    './/w:rStyle[@w:val="%(styleid)s"]' % dict(styleid=style_id))
+                for el in style_elements:
+                    el.val = our_style_id
 
     def add_numberings(self, doc, element):
         """Add numberings from the given document used in the given element."""
