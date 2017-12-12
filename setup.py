@@ -6,6 +6,7 @@ from setuptools import setup
 
 
 tests_require = [
+    'pytest',
 ]
 
 setup(
