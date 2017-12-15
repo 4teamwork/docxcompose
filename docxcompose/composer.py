@@ -138,8 +138,9 @@ class Composer(object):
             our_style_id = our_style_names2ids.get(
                 doc_style_ids2names[style_id], style_id)
             if our_style_id not in our_style_ids:
-                style_element = doc.styles.element.get_by_id(style_id)
-                self.doc.styles.element.append(deepcopy(style_element))
+                style_element = deepcopy(doc.styles.element.get_by_id(style_id))
+                self.doc.styles.element.append(style_element)
+                self.add_numberings(doc, style_element)
                 # Also add linked styles
                 linked_style_ids = xpath(style_element, './/w:link/@w:val')
                 if linked_style_ids:
