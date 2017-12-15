@@ -28,6 +28,11 @@ def test_contains_custom_styles_from_both_docs(merged_styles):
     assert 'MeineFormatvorlageZchn' in style_ids
 
 
+def test_contains_linked_styles(merged_styles):
+    style_ids = [s.style_id for s in merged_styles.doc.styles]
+    assert 'QuoteChar' in style_ids
+
+
 @pytest.fixture
 def merged_styles():
     composer = Composer(Document(docx_path("styles_en.docx")))

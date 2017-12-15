@@ -135,10 +135,18 @@ class Composer(object):
         our_style_names2ids = {s.name: s.style_id for s in self.doc.styles}
 
         for style_id in used_style_ids:
-            our_style_id = our_style_names2ids.get(doc_style_ids2names[style_id])
+            our_style_id = our_style_names2ids.get(
+                doc_style_ids2names[style_id], style_id)
             if our_style_id not in our_style_ids:
                 style_element = doc.styles.element.get_by_id(style_id)
                 self.doc.styles.element.append(deepcopy(style_element))
+                # Also add linked styles
+                linked_style_id = xpath(style_element, './/w:link/@w:val')[0]
+                our_linked_style_id = our_style_names2ids.get(
+                    doc_style_ids2names[linked_style_id], linked_style_id)
+                if our_linked_style_id not in our_style_ids:
+                    our_linked_style = doc.styles.element.get_by_id(linked_style_id)
+                    self.doc.styles.element.append(deepcopy(our_linked_style))
             # Replace language-specific style id with our style id
             if our_style_id != style_id and our_style_id is not None:
                 style_elements = xpath(
@@ -148,10 +156,11 @@ class Composer(object):
                     './/w:rStyle[@w:val="%(styleid)s"]' % dict(styleid=style_id))
                 for el in style_elements:
                     el.val = our_style_id
+            # Update our style ids
+            our_style_ids = [s.style_id for s in self.doc.styles]
 
     def add_numberings(self, doc, element):
         """Add numberings from the given document used in the given element."""
-
         # Search for numbering references
         num_ids = set([n.val for n in xpath(element, './/w:numId')])
         if not num_ids:
