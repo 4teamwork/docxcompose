@@ -8,3 +8,5 @@ include/
 lib/
 *.egg-info/
 pip-selfcheck.json
+
+/.cache/
