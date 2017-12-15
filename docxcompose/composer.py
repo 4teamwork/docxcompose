@@ -141,12 +141,16 @@ class Composer(object):
                 style_element = doc.styles.element.get_by_id(style_id)
                 self.doc.styles.element.append(deepcopy(style_element))
                 # Also add linked styles
-                linked_style_id = xpath(style_element, './/w:link/@w:val')[0]
-                our_linked_style_id = our_style_names2ids.get(
-                    doc_style_ids2names[linked_style_id], linked_style_id)
-                if our_linked_style_id not in our_style_ids:
-                    our_linked_style = doc.styles.element.get_by_id(linked_style_id)
-                    self.doc.styles.element.append(deepcopy(our_linked_style))
+                linked_style_ids = xpath(style_element, './/w:link/@w:val')
+                if linked_style_ids:
+                    linked_style_id = linked_style_ids[0]
+                    our_linked_style_id = our_style_names2ids.get(
+                        doc_style_ids2names[linked_style_id], linked_style_id)
+                    if our_linked_style_id not in our_style_ids:
+                        our_linked_style = doc.styles.element.get_by_id(
+                            linked_style_id)
+                        self.doc.styles.element.append(deepcopy(
+                            our_linked_style))
             # Replace language-specific style id with our style id
             if our_style_id != style_id and our_style_id is not None:
                 style_elements = xpath(
