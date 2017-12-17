@@ -26,6 +26,7 @@ class Composer(object):
 
     def reset_reference_mapping(self):
         self.num_id_mapping = {}
+        self.anum_id_mapping = {}
 
     def append(self, doc, remove_property_fields=True):
         """Append the given document."""
@@ -152,6 +153,27 @@ class Composer(object):
                             linked_style_id)
                         self.doc.styles.element.append(deepcopy(
                             our_linked_style))
+            else:
+                # Create a mapping for abstractNumIds used in existing styles
+                # This is used when adding numberings to avoid having multiple
+                # <w:abstractNum> elements for the same style.
+                style_element = doc.styles.element.get_by_id(style_id)
+                num_ids = xpath(style_element, './/w:numId/@w:val')
+                if num_ids:
+                    anum_ids = xpath(
+                        doc.part.numbering_part.element,
+                        './/w:num[@w:numId="%s"]/w:abstractNumId/@w:val' % num_ids[0])
+                    if anum_ids:
+                        our_style_element = self.doc.styles.element.get_by_id(our_style_id)
+                        our_num_ids = xpath(our_style_element, './/w:numId/@w:val')
+                        if our_num_ids:
+                            numbering_part = self.numbering_part()
+                            our_anum_ids = xpath(
+                                numbering_part.element,
+                                './/w:num[@w:numId="%s"]/w:abstractNumId/@w:val' % our_num_ids[0])
+                            if our_anum_ids:
+                                self.anum_id_mapping[int(anum_ids[0])] = int(our_anum_ids[0])
+
             # Replace language-specific style id with our style id
             if our_style_id != style_id and our_style_id is not None:
                 style_elements = xpath(
@@ -186,37 +208,33 @@ class Composer(object):
             if not res:
                 continue
             num_element = deepcopy(res[0])
-            anum_id = num_element.xpath('//w:abstractNumId')[0]
-
-            # Find the referenced <w:abstractNum> element
-            res = src_numbering_part.element.xpath(
-                './/w:abstractNum[@w:abstractNumId="%s"]' % anum_id.val)
-            if not res:
-                continue
-            anum_element = deepcopy(res[0])
+            num_element.numId = next_num_id
 
             self.num_id_mapping[num_id] = next_num_id
 
-            num_element.numId = next_num_id
-            anum_id.val = next_anum_id
-            # anum_element.abstractNumId = next_anum_id
-            anum_element.set('{%s}abstractNumId' % NS['w'], str(next_anum_id))
+            anum_id = num_element.xpath('//w:abstractNumId')[0]
+            if anum_id.val not in self.anum_id_mapping:
+                # Find the referenced <w:abstractNum> element
+                res = src_numbering_part.element.xpath(
+                    './/w:abstractNum[@w:abstractNumId="%s"]' % anum_id.val)
+                if not res:
+                    continue
+                anum_element = deepcopy(res[0])
+                self.anum_id_mapping[anum_id.val] = next_anum_id
+                anum_id.val = next_anum_id
+                # anum_element.abstractNumId = next_anum_id
+                anum_element.set('{%s}abstractNumId' % NS['w'], str(next_anum_id))
 
-            # Make sure we have a unique nsid so numberings restart properly
-            nsid = anum_element.find('.//w:nsid', NS)
-            nsid.set(
-                '{%s}val' % NS['w'],
-                "{0:0{1}X}".format(random.randint(0, 0xffffffff), 8))
+                # Make sure we have a unique nsid so numberings restart properly
+                nsid = anum_element.find('.//w:nsid', NS)
+                nsid.set(
+                    '{%s}val' % NS['w'],
+                    "{0:0{1}X}".format(random.randint(0, 0xffffffff), 8))
 
-            # Find position of first <w:num> element
-            nums = numbering_part.element.xpath('.//w:num')
-            if nums:
-                anum_index = numbering_part.element.index(nums[0])
+                self._insert_abstract_num(anum_element)
             else:
-                anum_index = 0
+                anum_id.val = self.anum_id_mapping[anum_id.val]
 
-            # Insert <w:abstractNum> before <w:num> elements
-            numbering_part.element.insert(anum_index, anum_element)
             numbering_part.element.append(num_element)
 
         # Fix references
@@ -245,6 +263,17 @@ class Composer(object):
             next_anum_id = 0
 
         return next_num_id, next_anum_id
+
+    def _insert_abstract_num(self, element):
+        # Find position of first <w:num> element
+        # We'll insert <w:abstractNum> before that
+        numbering_part = self.numbering_part()
+        nums = numbering_part.element.xpath('.//w:num')
+        if nums:
+            anum_index = numbering_part.element.index(nums[0])
+        else:
+            anum_index = 0
+        numbering_part.element.insert(anum_index, element)
 
     def numbering_part(self):
         """The numbering part of the document."""
