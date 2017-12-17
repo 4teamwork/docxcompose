@@ -171,25 +171,11 @@ class Composer(object):
         if not num_ids:
             return
 
+        next_num_id, next_anum_id = self._next_numbering_ids()
+
         numbering_part = self.numbering_part()
-
-        # Determine next unused numId (numbering starts with 1)
-        current_num_ids = [
-            n.numId for n in numbering_part.element.xpath('.//w:num')]
-        if current_num_ids:
-            next_num_id = max(current_num_ids) + 1
-        else:
-            next_num_id = 1
-
-        # Determine next unused abstractNumId (numbering starts with 0)
-        current_anum_ids = [int(n.get('{%s}abstractNumId' % NS['w'])) for n in
-                            numbering_part.element.xpath('.//w:abstractNum')]
-        if current_anum_ids:
-            next_anum_id = max(current_anum_ids) + 1
-        else:
-            next_anum_id = 0
-
         src_numbering_part = doc.part.numbering_part
+
         for num_id in num_ids:
             if num_id in self.num_id_mapping:
                 continue
@@ -237,6 +223,28 @@ class Composer(object):
         for num_id_ref in xpath(element, './/w:numId'):
             num_id_ref.val = self.num_id_mapping.get(
                 num_id_ref.val, num_id_ref.val)
+
+    def _next_numbering_ids(self):
+        numbering_part = self.numbering_part()
+
+        # Determine next unused numId (numbering starts with 1)
+        current_num_ids = [
+            n.numId for n in xpath(numbering_part.element, './/w:num')]
+        if current_num_ids:
+            next_num_id = max(current_num_ids) + 1
+        else:
+            next_num_id = 1
+
+        # Determine next unused abstractNumId (numbering starts with 0)
+        current_anum_ids = [
+            int(n) for n in
+            xpath(numbering_part.element, './/w:abstractNum/@w:abstractNumId')]
+        if current_anum_ids:
+            next_anum_id = max(current_anum_ids) + 1
+        else:
+            next_anum_id = 0
+
+        return next_num_id, next_anum_id
 
     def numbering_part(self):
         """The numbering part of the document."""
