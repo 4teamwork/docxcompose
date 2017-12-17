@@ -22,11 +22,14 @@ class Composer(object):
         self.doc = doc
         self.pkg = doc.part.package
 
+        self.restart_numbering = True
+
         self.reset_reference_mapping()
 
     def reset_reference_mapping(self):
         self.num_id_mapping = {}
         self.anum_id_mapping = {}
+        self._numbering_restarted = set()
 
     def append(self, doc, remove_property_fields=True):
         """Append the given document."""
@@ -43,6 +46,8 @@ class Composer(object):
             for name in cprops.dict().keys():
                 cprops.remove_field(name)
 
+        self._create_style_id_mapping(doc)
+
         for element in doc.element.body:
             if isinstance(element, CT_SectPr):
                 continue
@@ -50,6 +55,7 @@ class Composer(object):
             self.doc.element.body.insert(index, element)
             self.add_styles(doc, element)
             self.add_numberings(doc, element)
+            self.restart_first_numbering(doc, element)
             self.add_images(doc, element)
             self.add_footnotes(doc, element)
             self.add_hyperlinks(doc.part, self.doc.part, element)
@@ -124,20 +130,27 @@ class Composer(object):
             self.doc.part.relate_to(footnote_part, RT.FOOTNOTES)
         return footnote_part
 
+    def mapped_style_id(self, style_id):
+        if style_id not in self._style_id2name:
+            return style_id
+        return self._style_name2id.get(
+                self._style_id2name[style_id], style_id)
+
+    def _create_style_id_mapping(self, doc):
+        # Style ids are language-specific, but names not (always), WTF?
+        # The inserted document may have another language than the composed one.
+        # Thus we map the style id using the style name.
+        self._style_id2name = {s.style_id: s.name for s in doc.styles}
+        self._style_name2id = {s.name: s.style_id for s in self.doc.styles}
+
     def add_styles(self, doc, element):
         """Add styles from the given document used in the given element."""
         our_style_ids = [s.style_id for s in self.doc.styles]
         used_style_ids = set([e.val for e in xpath(
             element, './/w:tblStyle|.//w:pStyle|.//w:rStyle')])
-        # Style ids are language-specific, but names not, WTF?
-        # The inserted document may have another language than the composed one.
-        # Thus we lookup the style id using the style name.
-        doc_style_ids2names = {s.style_id: s.name for s in doc.styles}
-        our_style_names2ids = {s.name: s.style_id for s in self.doc.styles}
 
         for style_id in used_style_ids:
-            our_style_id = our_style_names2ids.get(
-                doc_style_ids2names[style_id], style_id)
+            our_style_id = self.mapped_style_id(style_id)
             if our_style_id not in our_style_ids:
                 style_element = deepcopy(doc.styles.element.get_by_id(style_id))
                 self.doc.styles.element.append(style_element)
@@ -146,8 +159,7 @@ class Composer(object):
                 linked_style_ids = xpath(style_element, './/w:link/@w:val')
                 if linked_style_ids:
                     linked_style_id = linked_style_ids[0]
-                    our_linked_style_id = our_style_names2ids.get(
-                        doc_style_ids2names[linked_style_id], linked_style_id)
+                    our_linked_style_id = self.mapped_style_id(linked_style_id)
                     if our_linked_style_id not in our_style_ids:
                         our_linked_style = doc.styles.element.get_by_id(
                             linked_style_id)
@@ -292,6 +304,44 @@ class Composer(object):
                 partname, content_type, element, self.doc.part.package)
             self.doc.part.relate_to(numbering_part, RT.NUMBERING)
         return numbering_part
+
+    def restart_first_numbering(self, doc, element):
+        if not self.restart_numbering:
+            return
+        style_id = xpath(element, './/w:pStyle/@w:val')
+        if not style_id:
+            return
+        style_id = self.mapped_style_id(style_id[0])
+        if style_id in self._numbering_restarted:
+            return
+        style_element = self.doc.styles.element.get_by_id(style_id)
+        if style_element is None:
+            return
+        num_id = xpath(style_element, './/w:numId/@w:val')
+        if not num_id:
+            return
+        outline_lvl = xpath(style_element, './/w:outlineLvl')
+        if outline_lvl:
+            # Styles with an outline level are propably headings.
+            # Do not restart numbering of headings
+            return
+        num_element = xpath(
+            self.numbering_part().element,
+            './/w:num[@w:numId="%s"]' % num_id[0])
+        new_num_element = deepcopy(num_element[0])
+        lvl_override = parse_xml(
+            '<w:lvlOverride xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'
+            ' w:ilvl="0"><w:startOverride w:val="1"/></w:lvlOverride>')
+        new_num_element.append(lvl_override)
+        next_num_id, next_anum_id = self._next_numbering_ids()
+        new_num_element.numId = next_num_id
+        self.numbering_part().element.append(new_num_element)
+        num_pr = parse_xml(
+            '<w:numPr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+            '<w:ilvl w:val="0"/><w:numId w:val="%s"/></w:numPr>' % next_num_id)
+        paragraph_props = xpath(element, './/w:pPr/w:pStyle[@w:val="%s"]/parent::w:pPr' % style_id)
+        paragraph_props[0].append(num_pr)
+        self._numbering_restarted.add(style_id)
 
     def add_hyperlinks(self, src_part, dst_part, element):
         """Add hyperlinks from src_part referenced in element to dst_part."""

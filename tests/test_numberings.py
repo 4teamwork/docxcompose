@@ -12,6 +12,11 @@ def test_abstractnums_from_styles_are_not_duplicated(multiple_numberings):
     assert len(anums) == 2
 
 
+def test_restart_first_numbering(multiple_numberings):
+    paragraphs = xpath(multiple_numberings.doc.element.body, './/w:p')
+    assert len(xpath(paragraphs[9], './/w:numId')) == 1
+
+
 @pytest.fixture
 def numberings_in_styles():
     composer = Composer(Document(docx_path("master.docx")))
