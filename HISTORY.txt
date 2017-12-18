@@ -8,6 +8,15 @@ Changelog
 - Fix handling of styles when composing documents with different languages.
   [buchi]
 
+- Also add numberings referenced in styles.
+  [buchi]
+
+- Avoid having multiple <w:abstractNum> elements for the same style.
+  [buchi]
+
+- Restart first numbering of inserted documents
+  [buchi]
+
 
 1.0.0a3 (2017-11-22)
 --------------------
