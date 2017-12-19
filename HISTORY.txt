@@ -17,6 +17,9 @@ Changelog
 - Restart first numbering of inserted documents
   [buchi]
 
+- Add support for anchored images.
+  [buchi]
+
 
 1.0.0a3 (2017-11-22)
 --------------------
