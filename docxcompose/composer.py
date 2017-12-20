@@ -171,21 +171,22 @@ class Composer(object):
                 # This is used when adding numberings to avoid having multiple
                 # <w:abstractNum> elements for the same style.
                 style_element = doc.styles.element.get_by_id(style_id)
-                num_ids = xpath(style_element, './/w:numId/@w:val')
-                if num_ids:
-                    anum_ids = xpath(
-                        doc.part.numbering_part.element,
-                        './/w:num[@w:numId="%s"]/w:abstractNumId/@w:val' % num_ids[0])
-                    if anum_ids:
-                        our_style_element = self.doc.styles.element.get_by_id(our_style_id)
-                        our_num_ids = xpath(our_style_element, './/w:numId/@w:val')
-                        if our_num_ids:
-                            numbering_part = self.numbering_part()
-                            our_anum_ids = xpath(
-                                numbering_part.element,
-                                './/w:num[@w:numId="%s"]/w:abstractNumId/@w:val' % our_num_ids[0])
-                            if our_anum_ids:
-                                self.anum_id_mapping[int(anum_ids[0])] = int(our_anum_ids[0])
+                if style_element:
+                    num_ids = xpath(style_element, './/w:numId/@w:val')
+                    if num_ids:
+                        anum_ids = xpath(
+                            doc.part.numbering_part.element,
+                            './/w:num[@w:numId="%s"]/w:abstractNumId/@w:val' % num_ids[0])
+                        if anum_ids:
+                            our_style_element = self.doc.styles.element.get_by_id(our_style_id)
+                            our_num_ids = xpath(our_style_element, './/w:numId/@w:val')
+                            if our_num_ids:
+                                numbering_part = self.numbering_part()
+                                our_anum_ids = xpath(
+                                    numbering_part.element,
+                                    './/w:num[@w:numId="%s"]/w:abstractNumId/@w:val' % our_num_ids[0])
+                                if our_anum_ids:
+                                    self.anum_id_mapping[int(anum_ids[0])] = int(our_anum_ids[0])
 
             # Replace language-specific style id with our style id
             if our_style_id != style_id and our_style_id is not None:
