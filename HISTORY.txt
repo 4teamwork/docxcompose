@@ -23,6 +23,9 @@ Changelog
 - Handle referenced style ids that are not defined in styles.xml
   [buchi]
 
+- Add support for headers and footers
+  [buchi]
+
 
 1.0.0a3 (2017-11-22)
 --------------------

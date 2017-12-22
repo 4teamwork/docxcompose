@@ -58,6 +58,8 @@ class Composer(object):
             self.restart_first_numbering(doc, element)
             self.add_images(doc, element)
             self.add_footnotes(doc, element)
+            self.add_headers(doc, element)
+            self.add_footers(doc, element)
             self.add_hyperlinks(doc.part, self.doc.part, element)
             index += 1
 
@@ -357,3 +359,63 @@ class Composer(object):
                 new_rid = dst_part.rels.get_or_add_ext_rel(
                     rel.reltype, rel.target_ref)
                 hyperlink_ref.set('{%s}id' % NS['r'], new_rid)
+
+    def add_headers(self, doc, element):
+        header_refs = xpath(element, './/w:headerReference')
+        if not header_refs:
+            return
+        for ref in header_refs:
+            rid = ref.get('{%s}id' % NS['r'])
+            rel = doc.part.rels[rid]
+            header_part = self.header_part(content=rel.target_part.blob)
+            my_rel = self.doc.part.rels.get_or_add(
+                rel.reltype, header_part)
+            ref.set('{%s}id' % NS['r'], my_rel.rId)
+
+    def header_part(self, content=None):
+        """The header part of the document."""
+        header_rels = [
+            rel for rel in self.doc.part.rels.values() if rel.reltype == RT.HEADER]
+        next_id = len(header_rels) + 1
+        # Create a new header part
+        partname = PackURI('/word/header%s.xml' % next_id)
+        content_type = CT.WML_HEADER
+        if not content:
+            xml_path = os.path.join(
+                os.path.dirname(__file__), 'templates', 'header.xml')
+            with open(xml_path, 'rb') as f:
+                content = f.read()
+        header_part = Part(
+            partname, content_type, content, self.doc.part.package)
+        self.doc.part.relate_to(header_part, RT.HEADER)
+        return header_part
+
+    def add_footers(self, doc, element):
+        footer_refs = xpath(element, './/w:footerReference')
+        if not footer_refs:
+            return
+        for ref in footer_refs:
+            rid = ref.get('{%s}id' % NS['r'])
+            rel = doc.part.rels[rid]
+            footer_part = self.footer_part(content=rel.target_part.blob)
+            my_rel = self.doc.part.rels.get_or_add(
+                rel.reltype, footer_part)
+            ref.set('{%s}id' % NS['r'], my_rel.rId)
+
+    def footer_part(self, content=None):
+        """The footer part of the document."""
+        footer_rels = [
+            rel for rel in self.doc.part.rels.values() if rel.reltype == RT.FOOTER]
+        next_id = len(footer_rels) + 1
+        # Create a new header part
+        partname = PackURI('/word/footer%s.xml' % next_id)
+        content_type = CT.WML_FOOTER
+        if not content:
+            xml_path = os.path.join(
+                os.path.dirname(__file__), 'templates', 'footer.xml')
+            with open(xml_path, 'rb') as f:
+                content = f.read()
+        footer_part = Part(
+            partname, content_type, content, self.doc.part.package)
+        self.doc.part.relate_to(footer_part, RT.FOOTER)
+        return footer_part
