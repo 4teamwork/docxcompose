@@ -23,7 +23,7 @@ Changelog
 - Handle referenced style ids that are not defined in styles.xml
   [buchi]
 
-- Add support for headers and footers
+- Remove header and footer references in paragraph properties.
   [buchi]
 
 

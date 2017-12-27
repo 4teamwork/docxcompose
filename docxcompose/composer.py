@@ -58,8 +58,9 @@ class Composer(object):
             self.restart_first_numbering(doc, element)
             self.add_images(doc, element)
             self.add_footnotes(doc, element)
-            self.add_headers(doc, element)
-            self.add_footers(doc, element)
+            self.remove_header_and_footer_references(doc, element)
+            # self.add_headers(doc, element)
+            # self.add_footers(doc, element)
             self.add_hyperlinks(doc.part, self.doc.part, element)
             index += 1
 
@@ -173,7 +174,7 @@ class Composer(object):
                 # This is used when adding numberings to avoid having multiple
                 # <w:abstractNum> elements for the same style.
                 style_element = doc.styles.element.get_by_id(style_id)
-                if style_element:
+                if style_element is not None:
                     num_ids = xpath(style_element, './/w:numId/@w:val')
                     if num_ids:
                         anum_ids = xpath(
@@ -419,3 +420,9 @@ class Composer(object):
             partname, content_type, content, self.doc.part.package)
         self.doc.part.relate_to(footer_part, RT.FOOTER)
         return footer_part
+
+    def remove_header_and_footer_references(self, doc, element):
+        refs = xpath(
+            element, './/w:headerReference|.//w:footerReference')
+        for ref in refs:
+            ref.getparent().remove(ref)
