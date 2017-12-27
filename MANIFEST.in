@@ -1,5 +1,6 @@
-recursive-include docxcompose *
-recursive-include docs *
-include *
+graft docxcompose
+prune tests
+include *.rst
+include *.txt
+exclude .gitignore
 global-exclude *.pyc
-exclude pip-selfcheck.json
