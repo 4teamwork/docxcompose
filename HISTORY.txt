@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.0.0a4 (unreleased)
+1.0.0a4 (2017-12-27)
 --------------------
 
 - Fix handling of styles when composing documents with different languages.
