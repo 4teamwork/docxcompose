@@ -64,6 +64,8 @@ class Composer(object):
             self.add_hyperlinks(doc.part, self.doc.part, element)
             index += 1
 
+        self.renumber_bookmarks()
+
     def save(self, filename):
         self.doc.save(filename)
 
@@ -426,3 +428,12 @@ class Composer(object):
             element, './/w:headerReference|.//w:footerReference')
         for ref in refs:
             ref.getparent().remove(ref)
+
+    def renumber_bookmarks(self):
+        bookmarks = xpath(
+            self.doc.element.body, './/w:bookmarkStart|.//w:bookmarkEnd')
+        bookmark_id = 0
+        for bookmark in bookmarks:
+            bookmark.set('{%s}id' % NS['w'], str(bookmark_id))
+            if bookmark.tag == '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}bookmarkEnd':
+                bookmark_id += 1
