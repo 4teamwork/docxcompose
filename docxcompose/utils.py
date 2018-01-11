@@ -1,14 +1,18 @@
 from docx.oxml.xmlchemy import BaseOxmlElement
+from docx.oxml.ns import nsmap
 
 NS = {
     'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
     'cp': 'http://schemas.openxmlformats.org/officeDocument/2006/custom-properties',
+    'o': 'urn:schemas-microsoft-com:office:office',
     'pic': 'http://schemas.openxmlformats.org/drawingml/2006/picture',
     'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+    'v': 'urn:schemas-microsoft-com:vml',
     'vt': 'http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes',
     'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
     'wp': 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing',
 }
+nsmap.update(NS)
 
 
 def xpath(element, xpath_str):

@@ -8,6 +8,9 @@ Changelog
 - Renumber bookmarks to avoid duplicate ids.
   [buchi]
 
+- Add support for shapes.
+  [buchi]
+
 
 1.0.0a4 (2017-12-27)
 --------------------

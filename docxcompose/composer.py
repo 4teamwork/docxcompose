@@ -57,6 +57,7 @@ class Composer(object):
             self.add_numberings(doc, element)
             self.restart_first_numbering(doc, element)
             self.add_images(doc, element)
+            self.add_shapes(doc, element)
             self.add_footnotes(doc, element)
             self.remove_header_and_footer_references(doc, element)
             # self.add_headers(doc, element)
@@ -92,6 +93,44 @@ class Composer(object):
 
             new_rid = self.doc.part.relate_to(new_img_part, RT.IMAGE)
             blip.set('{%s}embed' % NS['r'], new_rid)
+
+    def add_shapes(self, doc, element):
+        shapes = xpath(element, './/w:object/v:shape/v:imagedata')
+        for shape in shapes:
+            rid = shape.get('{%s}id' % NS['r'])
+            img_part = doc.part.rels[rid].target_part
+
+            new_img_part = self.pkg.image_parts._get_by_sha1(img_part.sha1)
+            if new_img_part is None:
+                image = ImageWrapper(img_part)
+                new_img_part = self.pkg.image_parts._add_image_part(image)
+
+            new_rid = self.doc.part.relate_to(new_img_part, RT.IMAGE)
+            shape.set('{%s}id' % NS['r'], new_rid)
+
+            ole_objects = xpath(shape.getparent().getparent(), './/o:OLEObject')
+            for ole_object in ole_objects:
+                rid = ole_object.get('{%s}id' % NS['r'])
+                ole_part = doc.part.rels[rid].target_part
+
+                partname = self._next_ole_object_partname(ole_part.partname.ext)
+                content_type = CT.OFC_OLE_OBJECT
+                new_ole_part = Part(
+                    partname, content_type, ole_part._blob, self.pkg)
+
+                new_rid = self.doc.part.relate_to(new_ole_part, RT.OLE_OBJECT)
+                ole_object.set('{%s}id' % NS['r'], new_rid)
+
+    def _next_ole_object_partname(self, ext):
+        def ole_object_partname(n):
+            return PackURI('/word/embeddings/oleObject%d.%s' % (n, ext))
+        used_numbers = [
+            part.partname.idx for part in self.pkg.iter_parts()
+            if part.content_type == CT.OFC_OLE_OBJECT]
+        for n in range(1, len(used_numbers)+1):
+            if n not in used_numbers:
+                return ole_object_partname(n)
+        return ole_object_partname(len(used_numbers)+1)
 
     def add_footnotes(self, doc, element):
         """Add footnotes from the given document used in the given element."""
