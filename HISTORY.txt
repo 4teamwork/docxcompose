@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.0.0a5 (unreleased)
+1.0.0a5 (2018-01-11)
 --------------------
 
 - Renumber bookmarks to avoid duplicate ids.
