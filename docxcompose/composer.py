@@ -371,9 +371,21 @@ class Composer(object):
             # Styles with an outline level are propably headings.
             # Do not restart numbering of headings
             return
+
+        numbering_part = self.numbering_part()
         num_element = xpath(
-            self.numbering_part().element,
+            numbering_part.element,
             './/w:num[@w:numId="%s"]' % num_id[0])
+        anum_id = xpath(num_element[0], './/w:abstractNumId/@w:val')[0]
+        anum_element = xpath(
+            numbering_part.element,
+            './/w:abstractNum[@w:abstractNumId="%s"]' % anum_id)
+        num_fmt = xpath(
+            anum_element[0], './/w:lvl[@w:ilvl="0"]/w:numFmt/@w:val')
+        # Do not restart numbering of bullets
+        if num_fmt[0] == 'bullet':
+            return
+
         new_num_element = deepcopy(num_element[0])
         lvl_override = parse_xml(
             '<w:lvlOverride xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'
