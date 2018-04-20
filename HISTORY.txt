@@ -17,6 +17,9 @@ Changelog
 - Fix renumbering of bookmarks.
   [buchi]
 
+- Renumber ids of drawing object properties (<wp:docPr>).
+  [buchi]
+
 
 1.0.0a6 (2018-02-20)
 --------------------

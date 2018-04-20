@@ -66,6 +66,7 @@ class Composer(object):
             index += 1
 
         self.renumber_bookmarks()
+        self.renumber_docpr_ids()
 
     def save(self, filename):
         self.doc.save(filename)
@@ -506,3 +507,11 @@ class Composer(object):
         for bookmark in bookmarks_end:
             bookmark.set('{%s}id' % NS['w'], str(bookmark_id))
             bookmark_id += 1
+
+    def renumber_docpr_ids(self):
+        doc_prs = xpath(
+            self.doc.element.body, './/wp:docPr')
+        doc_pr_id = 1
+        for doc_pr in doc_prs:
+            doc_pr.id = doc_pr_id
+            doc_pr_id += 1
