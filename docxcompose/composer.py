@@ -496,10 +496,13 @@ class Composer(object):
             ref.getparent().remove(ref)
 
     def renumber_bookmarks(self):
-        bookmarks = xpath(
-            self.doc.element.body, './/w:bookmarkStart|.//w:bookmarkEnd')
+        bookmarks_start = xpath(self.doc.element.body, './/w:bookmarkStart')
         bookmark_id = 0
-        for bookmark in bookmarks:
+        for bookmark in bookmarks_start:
             bookmark.set('{%s}id' % NS['w'], str(bookmark_id))
-            if bookmark.tag == '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}bookmarkEnd':
-                bookmark_id += 1
+            bookmark_id += 1
+        bookmarks_end = xpath(self.doc.element.body, './/w:bookmarkEnd')
+        bookmark_id = 0
+        for bookmark in bookmarks_end:
+            bookmark.set('{%s}id' % NS['w'], str(bookmark_id))
+            bookmark_id += 1
