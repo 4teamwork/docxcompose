@@ -8,6 +8,9 @@ Changelog
 - Fix handling of images in WordprocessingGroups (<wpg:wpg>).
   [buchi]
 
+- Fix handling of shapes in shape groups (<v:group>).
+  [buchi]
+
 
 1.0.0a6 (2018-02-20)
 --------------------

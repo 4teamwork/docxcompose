@@ -95,7 +95,7 @@ class Composer(object):
             blip.set('{%s}embed' % NS['r'], new_rid)
 
     def add_shapes(self, doc, element):
-        shapes = xpath(element, './/w:object/v:shape/v:imagedata')
+        shapes = xpath(element, './/v:shape/v:imagedata')
         for shape in shapes:
             rid = shape.get('{%s}id' % NS['r'])
             img_part = doc.part.rels[rid].target_part
