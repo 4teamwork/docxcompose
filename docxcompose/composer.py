@@ -247,13 +247,12 @@ class Composer(object):
     def add_numberings(self, doc, element):
         """Add numberings from the given document used in the given element."""
         # Search for numbering references
-        num_ids = set([n.val for n in xpath(element, './/w:numId')])
+        num_ids = set(xpath(element, './/w:numId/@w:val'))
         if not num_ids:
             return
 
         next_num_id, next_anum_id = self._next_numbering_ids()
 
-        numbering_part = self.numbering_part()
         src_numbering_part = doc.part.numbering_part
 
         for num_id in num_ids:
@@ -293,7 +292,7 @@ class Composer(object):
             else:
                 anum_id.val = self.anum_id_mapping[anum_id.val]
 
-            numbering_part.element.append(num_element)
+            self._insert_num(num_element)
 
         # Fix references
         for num_id_ref in xpath(element, './/w:numId'):
@@ -321,6 +320,16 @@ class Composer(object):
             next_anum_id = 0
 
         return next_num_id, next_anum_id
+
+    def _insert_num(self, element):
+        # Find position of last <w:num> element and insert after that
+        numbering_part = self.numbering_part()
+        nums = numbering_part.element.xpath('.//w:num')
+        if nums:
+            num_index = numbering_part.element.index(nums[-1])
+            numbering_part.element.insert(num_index, element)
+        else:
+            numbering_part.element.append(element)
 
     def _insert_abstract_num(self, element):
         # Find position of first <w:num> element
@@ -393,12 +402,18 @@ class Composer(object):
         new_num_element.append(lvl_override)
         next_num_id, next_anum_id = self._next_numbering_ids()
         new_num_element.numId = next_num_id
-        self.numbering_part().element.append(new_num_element)
-        num_pr = parse_xml(
-            '<w:numPr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
-            '<w:ilvl w:val="0"/><w:numId w:val="%s"/></w:numPr>' % next_num_id)
+        self._insert_num(new_num_element)
+
         paragraph_props = xpath(element, './/w:pPr/w:pStyle[@w:val="%s"]/parent::w:pPr' % style_id)
-        paragraph_props[0].append(num_pr)
+        num_pr = xpath(paragraph_props[0], './/w:numPr')
+        if num_pr:
+            num_pr = num_pr[0]
+            num_pr.numId.val = next_num_id
+        else:
+            num_pr = parse_xml(
+                '<w:numPr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+                '<w:ilvl w:val="0"/><w:numId w:val="%s"/></w:numPr>' % next_num_id)
+            paragraph_props[0].append(num_pr)
         self._numbering_restarted.add(style_id)
 
     def add_hyperlinks(self, src_part, dst_part, element):

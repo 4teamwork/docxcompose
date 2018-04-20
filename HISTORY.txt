@@ -11,6 +11,9 @@ Changelog
 - Fix handling of shapes in shape groups (<v:group>).
   [buchi]
 
+- Fix handling of numberings, avoid inserting multiple numbering properties.
+  [buchi]
+
 
 1.0.0a6 (2018-02-20)
 --------------------
