@@ -5,7 +5,8 @@ Changelog
 1.0.0a7 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- Fix handling of images in WordprocessingGroups (<wpg:wpg>).
+  [buchi]
 
 
 1.0.0a6 (2018-02-20)
