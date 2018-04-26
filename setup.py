@@ -11,7 +11,7 @@ tests_require = [
 
 setup(
     name='docxcompose',
-    version='1.0.0a8.dev0',
+    version='1.0.0a8',
     description="Compose .docx documents",
     long_description=(open("README.rst").read() + "\n" +
                       open("HISTORY.txt").read()),
