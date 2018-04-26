@@ -285,9 +285,10 @@ class Composer(object):
 
                 # Make sure we have a unique nsid so numberings restart properly
                 nsid = anum_element.find('.//w:nsid', NS)
-                nsid.set(
-                    '{%s}val' % NS['w'],
-                    "{0:0{1}X}".format(random.randint(0, 0xffffffff), 8))
+                if nsid:
+                    nsid.set(
+                        '{%s}val' % NS['w'],
+                        "{0:0{1}X}".format(random.randint(0, 0xffffffff), 8))
 
                 self._insert_abstract_num(anum_element)
             else:
