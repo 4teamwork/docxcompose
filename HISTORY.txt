@@ -5,7 +5,8 @@ Changelog
 1.0.0a8 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- Only attempt to set the nsid when it is available.
+  [deiferni]
 
 
 1.0.0a7 (2018-04-20)
