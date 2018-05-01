@@ -285,7 +285,7 @@ class Composer(object):
 
                 # Make sure we have a unique nsid so numberings restart properly
                 nsid = anum_element.find('.//w:nsid', NS)
-                if nsid:
+                if nsid is not None:
                     nsid.set(
                         '{%s}val' % NS['w'],
                         "{0:0{1}X}".format(random.randint(0, 0xffffffff), 8))
@@ -387,6 +387,11 @@ class Composer(object):
         num_element = xpath(
             numbering_part.element,
             './/w:num[@w:numId="%s"]' % num_id[0])
+
+        if not num_element:
+            # Styles with no numbering element should not be processed
+            return
+
         anum_id = xpath(num_element[0], './/w:abstractNumId/@w:val')[0]
         anum_element = xpath(
             numbering_part.element,

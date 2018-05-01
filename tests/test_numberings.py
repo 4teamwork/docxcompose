@@ -22,6 +22,22 @@ def test_do_not_restart_numbering_of_bullets(mixed_numberings):
     assert len(xpath(paragraphs[10], './/w:numId')) == 0
 
 
+def test_preserve_zero_numbering_references(numberings_with_zero_reference):
+    numberings_with_zero_ref = xpath(
+        numberings_with_zero_reference.doc.element.body,
+        './/w:p//w:numId[@w:val="0"]')
+    assert len(numberings_with_zero_ref) == 2
+
+
+@pytest.fixture
+def numberings_with_zero_reference():
+    composer = Composer(Document(
+        docx_path("numbering_reference_to_numbering_zero.docx")))
+    composer.append(Document(
+        docx_path("numbering_reference_to_numbering_zero.docx")))
+    return composer
+
+
 @pytest.fixture
 def numberings_in_styles():
     composer = Composer(Document(docx_path("master.docx")))
