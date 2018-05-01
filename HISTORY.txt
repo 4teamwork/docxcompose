@@ -5,7 +5,8 @@ Changelog
 1.0.0a9 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- Fix error in mapping of num_ids introduced in 1.0.0.a7.
+  [buchi]
 
 
 1.0.0a8 (2018-04-26)
