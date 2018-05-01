@@ -285,7 +285,7 @@ class Composer(object):
 
                 # Make sure we have a unique nsid so numberings restart properly
                 nsid = anum_element.find('.//w:nsid', NS)
-                if nsid:
+                if nsid is not None:
                     nsid.set(
                         '{%s}val' % NS['w'],
                         "{0:0{1}X}".format(random.randint(0, 0xffffffff), 8))
