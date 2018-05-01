@@ -248,7 +248,7 @@ class Composer(object):
     def add_numberings(self, doc, element):
         """Add numberings from the given document used in the given element."""
         # Search for numbering references
-        num_ids = set(xpath(element, './/w:numId/@w:val'))
+        num_ids = set([n.val for n in xpath(element, './/w:numId')])
         if not num_ids:
             return
 
