@@ -387,6 +387,11 @@ class Composer(object):
         num_element = xpath(
             numbering_part.element,
             './/w:num[@w:numId="%s"]' % num_id[0])
+
+        if not num_element:
+            # Styles with no numbering element should not be processed
+            return
+
         anum_id = xpath(num_element[0], './/w:abstractNumId/@w:val')[0]
         anum_element = xpath(
             numbering_part.element,
