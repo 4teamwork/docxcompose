@@ -5,7 +5,8 @@ Changelog
 1.0.0a10 (unreleased)
 ---------------------
 
-- Nothing changed yet.
+- Add console script command to compose two or more word files.
+  [deiferni]
 
 
 1.0.0a9 (2018-05-01)
