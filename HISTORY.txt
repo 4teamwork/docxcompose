@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.0.0a10 (unreleased)
+1.0.0a10 (2018-07-18)
 ---------------------
 
 - Add console script command to compose two or more word files.
