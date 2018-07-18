@@ -38,4 +38,9 @@ setup(
         'test': tests_require,
         'tests': tests_require,
     },
+    entry_points={
+        'console_scripts': [
+            'docxcompose = docxcompose.command:main'
+      ]
+  },
 )
