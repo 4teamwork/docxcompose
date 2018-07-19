@@ -23,6 +23,12 @@ def pytest_assertrepr_compare(config, op, left, right):
 
         diffs = []
         for lpart, rpart in left.neq_parts:
+
+            if not lpart.partname.endswith('.xml'):
+                diffs.append('Binary parts differ {}'.format(lpart.partname))
+                diffs.append('')
+                continue
+
             doc = etree.fromstring(lpart.blob)
             left_xml = etree.tounicode(doc, pretty_print=True)
             doc = etree.fromstring(rpart.blob)
@@ -33,6 +39,7 @@ def pytest_assertrepr_compare(config, op, left, right):
                 right_xml.splitlines(),
                 fromfile=lpart.partname,
                 tofile=lpart.partname))
+            diffs.append('')
 
         if diffs:
             filenames = [p[0].partname for p in left.neq_parts]
