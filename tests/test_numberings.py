@@ -1,9 +1,9 @@
 from docx import Document
 from docxcompose.composer import Composer
 from docxcompose.utils import xpath
-from utils import ComparableDocument
-from utils import ComposedComparableDocument
+from utils import ComposedDocument
 from utils import docx_path
+from utils import FixtureDocument
 import pytest
 
 
@@ -32,10 +32,10 @@ def test_preserve_zero_numbering_references(numberings_with_zero_reference):
 
 
 def test_restart_numberings():
-    doc = ComparableDocument(
-        Document(docx_path("composed/numberings_restart.docx")))
-    composed = ComposedComparableDocument(
+    doc = FixtureDocument("numberings_restart.docx")
+    composed = ComposedDocument(
         "numberings_restart.docx", "numberings_restart.docx")
+
     assert composed == doc
 
 
