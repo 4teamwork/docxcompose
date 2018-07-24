@@ -1,3 +1,5 @@
+from docx import Document
+from docxcompose.composer import Composer
 import os.path
 
 
@@ -6,6 +8,7 @@ def docx_path(filename):
 
 
 class ComparableDocument(object):
+    """Test helper to compare two docx documents."""
 
     def __init__(self, doc):
         self.doc = doc
@@ -26,3 +29,16 @@ class ComparableDocument(object):
             return False
 
         return True
+
+
+class ComposedComparableDocument(ComparableDocument):
+    """Compose at least two documents and provide a docx document for
+    comparison.
+
+    """
+    def __init__(self, master_filename, filename, *filenames):
+        composer = Composer(Document(docx_path(master_filename)))
+        for filename in [filename] + filenames:
+            composer.append(Document(docx_path(filename)))
+
+        super(ComposedComparableDocument, self).__init__(composer.doc)
