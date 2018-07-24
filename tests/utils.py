@@ -1,5 +1,6 @@
 from docx import Document
 from docxcompose.composer import Composer
+from operator import attrgetter
 import os.path
 
 
@@ -20,8 +21,9 @@ class ComparableDocument(object):
             self.partnames = []
             return
 
-        self.parts = self.doc.part.package.parts
-        self.partnames = sorted([p.partname for p in self.parts])
+        self.parts = sorted(
+            self.doc.part.package.parts, key=attrgetter('partname'))
+        self.partnames = sorted(p.partname for p in self.parts)
 
     def __eq__(self, other):
         self.has_neq_partnames = self.partnames != other.partnames
