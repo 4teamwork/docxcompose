@@ -1,6 +1,14 @@
 from difflib import unified_diff
 from lxml import etree
 from utils import ComparableDocument
+import pytest
+import random
+
+
+@pytest.fixture
+def static_reseed():
+    """Static random seed fixture to test content that generates random ids."""
+    random.seed(42)
 
 
 def pytest_assertrepr_compare(config, op, left, right):
