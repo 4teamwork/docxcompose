@@ -288,7 +288,8 @@ class Composer(object):
                 if nsid is not None:
                     nsid.set(
                         '{%s}val' % NS['w'],
-                        "{0:0{1}X}".format(random.randint(0, 0xffffffff), 8))
+                        "{0:08X}".format(int(10**8 * random.random()))
+                    )
 
                 self._insert_abstract_num(anum_element)
             else:
