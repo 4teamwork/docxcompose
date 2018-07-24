@@ -10,11 +10,12 @@ def pytest_assertrepr_compare(config, op, left, right):
         left.post_compare_failed(right)
         right.post_compare_failed(left)
 
-        extra_left = [
-            item for item in right.partnames if item not in left.partnames]
-        extra_right = [
-            item for item in left.partnames if item not in right.partnames]
         if left.has_neq_partnames:
+            extra_left = [
+                item for item in right.partnames if item not in left.partnames]
+            extra_right = [
+                item for item in left.partnames if item not in right.partnames]
+
             explanation = ['documents contain same parts']
             if right.doc is None:
                 explanation.append('Right document is None')
