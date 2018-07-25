@@ -19,6 +19,18 @@ Append a document to another document:
     composer.save("combined.docx")
 
 
+The docxcompose console script
+------------------------------
+
+
+The ``docxcompose`` console script allows to compose docx files form the command
+line, e.g.:
+
+.. code:: sh
+
+    $ docxcompose files/master.docx files/content.docx -o files/composed.docx
+
+
 A note about testing
 --------------------
 
