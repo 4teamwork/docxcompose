@@ -5,7 +5,8 @@ Changelog
 1.0.0a11 (unreleased)
 ---------------------
 
-- Nothing changed yet.
+- Fix issue when restarting intermittent numbering.
+  [deiferni]
 
 
 1.0.0a10 (2018-07-18)
