@@ -1,6 +1,8 @@
 from docx import Document
 from docxcompose.composer import Composer
+from utils import ComposedDocument
 from utils import docx_path
+from utils import FixtureDocument
 import pytest
 
 
@@ -31,6 +33,22 @@ def test_contains_custom_styles_from_both_docs(merged_styles):
 def test_contains_linked_styles(merged_styles):
     style_ids = [s.style_id for s in merged_styles.doc.styles]
     assert 'QuoteChar' in style_ids
+
+
+def test_merged_styles_de():
+    doc = FixtureDocument("styles_de.docx")
+    composed = ComposedDocument(
+        "styles_de.docx", "styles_en.docx")
+
+    assert composed == doc
+
+
+def test_merged_styles_en():
+    doc = FixtureDocument("styles_en.docx")
+    composed = ComposedDocument(
+        "styles_en.docx", "styles_de.docx")
+
+    assert composed == doc
 
 
 @pytest.fixture

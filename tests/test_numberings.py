@@ -1,7 +1,9 @@
 from docx import Document
 from docxcompose.composer import Composer
 from docxcompose.utils import xpath
+from utils import ComposedDocument
 from utils import docx_path
+from utils import FixtureDocument
 import pytest
 
 
@@ -27,6 +29,38 @@ def test_preserve_zero_numbering_references(numberings_with_zero_reference):
         numberings_with_zero_reference.doc.element.body,
         './/w:p//w:numId[@w:val="0"]')
     assert len(numberings_with_zero_ref) == 2
+
+
+def test_numberings(static_reseed):
+    doc = FixtureDocument("numberings.docx")
+    composed = ComposedDocument(
+        "numberings.docx", "numberings.docx")
+
+    assert composed == doc
+
+
+def test_restart_numberings():
+    doc = FixtureDocument("numberings_restart.docx")
+    composed = ComposedDocument(
+        "numberings_restart.docx", "numberings_restart.docx")
+
+    assert composed == doc
+
+
+def test_numberings_styles():
+    doc = FixtureDocument("numberings_styles.docx")
+    composed = ComposedDocument(
+        "numberings_styles.docx", "numberings_styles.docx")
+
+    assert composed == doc
+
+
+def test_numbering_reference_to_numbering_zero():
+    doc = FixtureDocument("numbering_reference_to_numbering_zero.docx")
+    composed = ComposedDocument("numbering_reference_to_numbering_zero.docx",
+                                "numbering_reference_to_numbering_zero.docx")
+
+    assert composed == doc
 
 
 @pytest.fixture

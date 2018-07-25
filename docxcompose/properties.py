@@ -1,3 +1,4 @@
+from __future__ import print_function
 from copy import deepcopy
 from datetime import datetime
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
@@ -86,7 +87,7 @@ class CustomProperties(object):
                 if text:
                     text[0].text = value
                 if len(text) > 1:
-                    print "Warning! Multiple Textnodes"
+                    print("Warning! Multiple Textnodes")
 
     def remove_field(self, name):
         """Remove the property field but keep it's value."""
