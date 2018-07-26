@@ -51,6 +51,14 @@ def test_merged_styles_en():
     assert composed == doc
 
 
+def test_styles_are_not_switched_for_first_numbering_element():
+    doc = FixtureDocument("switched_listing_style.docx")
+    composed = ComposedDocument(
+        "master_switched_listing_style.docx", "switched_listing_style.docx")
+
+    assert composed == doc
+
+
 @pytest.fixture
 def merged_styles():
     composer = Composer(Document(docx_path("styles_en.docx")))
