@@ -66,6 +66,7 @@ class Composer(object):
 
         self.renumber_bookmarks()
         self.renumber_docpr_ids()
+        self.fix_section_types(doc)
 
     def save(self, filename):
         self.doc.save(filename)
@@ -531,3 +532,17 @@ class Composer(object):
         for doc_pr in doc_prs:
             doc_pr.id = doc_pr_id
             doc_pr_id += 1
+
+    def fix_section_types(self, doc):
+        # The section type determines how the contents of the section will be
+        # placed relative to the *previous* section.
+        # The last section always stays at the end. Therefore we need to adjust
+        # the type of first new section.
+        # We also need to change the type of the last section of the composed
+        # document to the one from the appended document.
+        # TODO: Support when inserting document at an arbitrary position
+        if len(self.doc.sections) == 1:
+            return
+        first_new_section_idx = len(self.doc.sections) - len(doc.sections)
+        self.doc.sections[first_new_section_idx].start_type = self.doc.sections[-1].start_type
+        self.doc.sections[-1].start_type = doc.sections[-1].start_type
