@@ -31,6 +31,13 @@ def test_preserve_zero_numbering_references(numberings_with_zero_reference):
     assert len(numberings_with_zero_ref) == 2
 
 
+def test_restarts_numbering_if_sequence_is_split_across_elements(numbering_with_paragraphs):
+    numbering_ids = [each.val for each in xpath(
+        numbering_with_paragraphs.doc.element.body, './/w:numId')]
+
+    assert [3, 3, 3, 3, 4, 4, 4] == numbering_ids
+
+
 def test_numberings(static_reseed):
     doc = FixtureDocument("numberings.docx")
     composed = ComposedDocument(
@@ -63,6 +70,15 @@ def test_numbering_reference_to_numbering_zero():
     assert composed == doc
 
 
+def test_restarts_numbering_for_all_elements_of_same_sequence():
+    doc = FixtureDocument("numbering_with_paragraphs_in_between.docx")
+    composed = ComposedDocument(
+        "numbering_with_paragraphs_in_between.docx",
+        "numbering_with_paragraphs_in_between.docx")
+
+    assert composed == doc
+
+
 @pytest.fixture
 def numberings_with_zero_reference():
     composer = Composer(Document(
@@ -90,4 +106,11 @@ def multiple_numberings():
 def mixed_numberings():
     composer = Composer(Document(docx_path("numberings_restart.docx")))
     composer.append(Document(docx_path("numberings_restart.docx")))
+    return composer
+
+
+@pytest.fixture
+def numbering_with_paragraphs():
+    composer = Composer(Document(docx_path("master.docx")))
+    composer.append(Document(docx_path("numbering_with_paragraphs_in_between.docx")))
     return composer

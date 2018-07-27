@@ -5,7 +5,11 @@ Changelog
 1.0.0a11 (unreleased)
 ---------------------
 
-- Nothing changed yet.
+- Fix an issue where the listing style of the first element was different.
+  [deiferni]
+
+- Fix issue when restarting intermittent numbering.
+  [deiferni]
 
 
 1.0.0a10 (2018-07-18)

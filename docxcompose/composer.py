@@ -11,7 +11,6 @@ from docxcompose.image import ImageWrapper
 from docxcompose.properties import CustomProperties
 from docxcompose.utils import NS
 from docxcompose.utils import xpath
-
 import os.path
 import random
 
@@ -345,6 +344,14 @@ class Composer(object):
             anum_index = 0
         numbering_part.element.insert(anum_index, element)
 
+    def _replace_mapped_num_id(self, old_id, new_id):
+        """Replace a mapped numId with a new one."""
+
+        for key, value in self.num_id_mapping.items():
+            if value == old_id:
+                self.num_id_mapping[key] = new_id
+                return
+
     def numbering_part(self):
         """The numbering part of the document."""
         try:
@@ -375,19 +382,19 @@ class Composer(object):
         style_element = self.doc.styles.element.get_by_id(style_id)
         if style_element is None:
             return
-        num_id = xpath(style_element, './/w:numId/@w:val')
-        if not num_id:
+        style_num_id = xpath(style_element, './/w:numId/@w:val')
+        if not style_num_id:
             return
         outline_lvl = xpath(style_element, './/w:outlineLvl')
         if outline_lvl:
-            # Styles with an outline level are propably headings.
+            # Styles with an outline level are probably headings.
             # Do not restart numbering of headings
             return
 
         numbering_part = self.numbering_part()
         num_element = xpath(
             numbering_part.element,
-            './/w:num[@w:numId="%s"]' % num_id[0])
+            './/w:num[@w:numId="%s"]' % style_num_id[0])
 
         if not num_element:
             # Styles with no numbering element should not be processed
@@ -416,6 +423,8 @@ class Composer(object):
         num_pr = xpath(paragraph_props[0], './/w:numPr')
         if num_pr:
             num_pr = num_pr[0]
+            previous_num_id = num_pr.numId.val
+            self._replace_mapped_num_id(previous_num_id, next_num_id)
             num_pr.numId.val = next_num_id
         else:
             num_pr = parse_xml(
