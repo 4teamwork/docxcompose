@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.0.0a11 (unreleased)
+1.0.0a11 (2018-07-30)
 ---------------------
 
 - Fix handling of section type. 
