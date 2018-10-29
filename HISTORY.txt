@@ -5,13 +5,14 @@ Changelog
 1.0.0a12 (unreleased)
 ---------------------
 
-- Nothing changed yet.
+- Fix setting section type for appended documents with only one section.
+  [deiferni]
 
 
 1.0.0a11 (2018-07-30)
 ---------------------
 
-- Fix handling of section type. 
+- Fix handling of section type.
   [buchi]
 
 - Fix an issue where the listing style of the first element was different.
