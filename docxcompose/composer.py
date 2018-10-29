@@ -541,8 +541,10 @@ class Composer(object):
         # We also need to change the type of the last section of the composed
         # document to the one from the appended document.
         # TODO: Support when inserting document at an arbitrary position
-        if len(self.doc.sections) == 1:
+
+        if len(self.doc.sections) == 1 or len(doc.sections) == 1:
             return
+
         first_new_section_idx = len(self.doc.sections) - len(doc.sections)
         self.doc.sections[first_new_section_idx].start_type = self.doc.sections[-1].start_type
         self.doc.sections[-1].start_type = doc.sections[-1].start_type

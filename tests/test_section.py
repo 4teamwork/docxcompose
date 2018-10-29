@@ -22,3 +22,11 @@ def test_continuous_odd_section_break():
         "continous_section_break.docx", "odd_section_break.docx")
 
     assert composed == doc
+
+
+def test_next_page_section_break():
+    doc = FixtureDocument("next_page_section_break.docx")
+    composed = ComposedDocument(
+        "next_page_section_break.docx", "legacy_empty.docx")
+
+    assert composed == doc
