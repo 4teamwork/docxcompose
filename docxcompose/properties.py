@@ -24,7 +24,7 @@ class CustomProperties(object):
 
     def dict(self):
         """Returns a dict with all custom doc properties"""
-        if not self._element:
+        if self._element is None:
             return dict()
 
         props = xpath(self._element, './/cp:property')
