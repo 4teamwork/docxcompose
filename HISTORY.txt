@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.0.0a12 (unreleased)
+1.0.0a12 (2018-10-30)
 ---------------------
 
 - Fix setting section type for appended documents with only one section.
