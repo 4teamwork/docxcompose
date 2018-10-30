@@ -30,3 +30,11 @@ def test_next_page_section_break():
         "next_page_section_break.docx", "legacy_empty.docx")
 
     assert composed == doc
+
+
+def test_next_page_section_break_in_otherwise_empty_file_preseved():
+    doc = FixtureDocument("next_page_section_break_empty.docx")
+    composed = ComposedDocument(
+        "master.docx", "next_page_section_break_empty.docx")
+
+    assert composed == doc
