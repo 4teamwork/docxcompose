@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.0.0a13 (unreleased)
+1.0.0a13 (2018-11-05)
 ---------------------
 
 - Fix list-styles being set incorrectly when restarting numberings.
