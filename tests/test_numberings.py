@@ -79,6 +79,30 @@ def test_restarts_numbering_for_all_elements_of_same_sequence():
     assert composed == doc
 
 
+def test_preserves_list_styles_when_restarting_numberings():
+    doc = FixtureDocument("broken_listing.docx")
+    composed = ComposedDocument(
+        "broken_listing_master.docx", "broken_listing.docx")
+
+    assert composed == doc
+
+
+def test_preserves_list_styles_when_restarting_many_numberings():
+    doc = FixtureDocument("broken_listing_many.docx")
+    composed = ComposedDocument(
+        "broken_listing_master.docx", "broken_listing_many.docx")
+
+    assert composed == doc
+
+
+def test_preserves_list_styles_when_restarting_nested_numberings():
+    doc = FixtureDocument("broken_listing_nested.docx")
+    composed = ComposedDocument(
+        "broken_listing_master.docx", "broken_listing_nested.docx")
+
+    assert composed == doc
+
+
 @pytest.fixture
 def numberings_with_zero_reference():
     composer = Composer(Document(

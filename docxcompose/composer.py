@@ -383,19 +383,27 @@ class Composer(object):
         style_element = self.doc.styles.element.get_by_id(style_id)
         if style_element is None:
             return
-        style_num_id = xpath(style_element, './/w:numId/@w:val')
-        if not style_num_id:
-            return
         outline_lvl = xpath(style_element, './/w:outlineLvl')
         if outline_lvl:
             # Styles with an outline level are probably headings.
             # Do not restart numbering of headings
             return
 
+        # if there is a numId referenced from the paragraph, that numId is
+        # relevant, otherwise fall back to the style's numId
+        local_num_id = xpath(element, './/w:numPr/w:numId/@w:val')
+        if local_num_id:
+            num_id = local_num_id[0]
+        else:
+            style_num_id = xpath(style_element, './/w:numId/@w:val')
+            if not style_num_id:
+                return
+            num_id = style_num_id[0]
+
         numbering_part = self.numbering_part()
         num_element = xpath(
             numbering_part.element,
-            './/w:num[@w:numId="%s"]' % style_num_id[0])
+            './/w:num[@w:numId="%s"]' % num_id)
 
         if not num_element:
             # Styles with no numbering element should not be processed
