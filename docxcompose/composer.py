@@ -85,9 +85,7 @@ class Composer(object):
     def add_images(self, doc, element):
         """Add images from the given document used in the given element."""
         blips = xpath(
-            element,
-            '(.//w:drawing/wp:anchor|.//w:drawing/wp:inline)'
-            '/a:graphic/a:graphicData//pic:pic/pic:blipFill/a:blip')
+            element, '(.//a:blip|.//asvg:svgBlip)[@r:embed]')
         for blip in blips:
             rid = blip.get('{%s}embed' % NS['r'])
             img_part = doc.part.rels[rid].target_part
