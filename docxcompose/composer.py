@@ -14,6 +14,10 @@ from docxcompose.utils import xpath
 import os.path
 import random
 
+PART_RELTYPES_WITH_STYLES = [
+    RT.FOOTNOTES,
+]
+
 
 class Composer(object):
 
@@ -64,6 +68,7 @@ class Composer(object):
             self.add_hyperlinks(doc.part, self.doc.part, element)
             index += 1
 
+        self.add_styles_from_other_parts(doc)
         self.renumber_bookmarks()
         self.renumber_docpr_ids()
         self.fix_section_types(doc)
@@ -188,6 +193,15 @@ class Composer(object):
         # Thus we map the style id using the style name.
         self._style_id2name = {s.style_id: s.name for s in doc.styles}
         self._style_name2id = {s.name: s.style_id for s in self.doc.styles}
+
+    def add_styles_from_other_parts(self, doc):
+        for reltype in PART_RELTYPES_WITH_STYLES:
+            try:
+                el = parse_xml(doc.part.rels.part_with_reltype(reltype).blob)
+            except (KeyError, ValueError):
+                pass
+            else:
+                self.add_styles(doc, el)
 
     def add_styles(self, doc, element):
         """Add styles from the given document used in the given element."""
