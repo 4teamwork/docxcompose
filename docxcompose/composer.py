@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from copy import deepcopy
 from docx.opc.constants import CONTENT_TYPE as CT
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
@@ -244,8 +245,9 @@ class Composer(object):
     def add_styles(self, doc, element):
         """Add styles from the given document used in the given element."""
         our_style_ids = [s.style_id for s in self.doc.styles]
-        used_style_ids = set([e.val for e in xpath(
-            element, './/w:tblStyle|.//w:pStyle|.//w:rStyle')])
+        # de-duplicate ids and keep order to make sure tests are not flaky
+        used_style_ids = list(OrderedDict.fromkeys([e.val for e in xpath(
+            element, './/w:tblStyle|.//w:pStyle|.//w:rStyle')]))
 
         for style_id in used_style_ids:
             our_style_id = self.mapped_style_id(style_id)
