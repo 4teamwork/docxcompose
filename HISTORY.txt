@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.0.0a14 (unreleased)
+1.0.0a14 (2018-12-04)
 ---------------------
 
 - Implement generic handling of referenced parts. Among other, this adds
