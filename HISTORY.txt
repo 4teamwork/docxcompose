@@ -5,7 +5,15 @@ Changelog
 1.0.0a14 (unreleased)
 ---------------------
 
-- Nothing changed yet.
+- Implement generic handling of referenced parts. Among other, this adds
+  support for embedded Excel charts.
+  [buchi]
+
+- Handle embedded SVGs.
+  [buchi]
+
+- Add styles from other parts, e.g. footnotes.
+  [buchi]
 
 
 1.0.0a13 (2018-11-05)

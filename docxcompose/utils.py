@@ -3,6 +3,7 @@ from docx.oxml.ns import nsmap
 
 NS = {
     'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
+    'asvg': 'http://schemas.microsoft.com/office/drawing/2016/SVG/main',
     'cp': 'http://schemas.openxmlformats.org/officeDocument/2006/custom-properties',
     'o': 'urn:schemas-microsoft-com:office:office',
     'pic': 'http://schemas.openxmlformats.org/drawingml/2006/picture',

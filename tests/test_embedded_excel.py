@@ -2,9 +2,9 @@ from utils import ComposedDocument
 from utils import FixtureDocument
 
 
-def test_url():
-    doc = FixtureDocument("url.docx")
+def test_hyperlinks():
+    doc = FixtureDocument("embedded_excel_chart.docx")
     composed = ComposedDocument(
-        "master.docx", "url.docx")
+        "master.docx", "embedded_excel_chart.docx")
 
     assert composed == doc

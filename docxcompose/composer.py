@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from copy import deepcopy
 from docx.opc.constants import CONTENT_TYPE as CT
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
@@ -13,6 +14,20 @@ from docxcompose.utils import NS
 from docxcompose.utils import xpath
 import os.path
 import random
+import re
+
+FILENAME_IDX_RE = re.compile('([a-zA-Z/_-]+)([1-9][0-9]*)?')
+RID_IDX_RE = re.compile('rId([0-9]*)')
+
+REFERENCED_PARTS_IGNORED_RELTYPES = set([
+    RT.IMAGE,
+    RT.HEADER,
+    RT.FOOTER,
+])
+
+PART_RELTYPES_WITH_STYLES = [
+    RT.FOOTNOTES,
+]
 
 
 class Composer(object):
@@ -52,6 +67,7 @@ class Composer(object):
                 continue
             element = deepcopy(element)
             self.doc.element.body.insert(index, element)
+            self.add_referenced_parts(doc.part, self.doc.part, element)
             self.add_styles(doc, element)
             self.add_numberings(doc, element)
             self.restart_first_numbering(doc, element)
@@ -64,6 +80,7 @@ class Composer(object):
             self.add_hyperlinks(doc.part, self.doc.part, element)
             index += 1
 
+        self.add_styles_from_other_parts(doc)
         self.renumber_bookmarks()
         self.renumber_docpr_ids()
         self.fix_section_types(doc)
@@ -77,12 +94,62 @@ class Composer(object):
             return self.doc.element.body.index(section_props[0])
         return len(self.doc.element.body)
 
+    def add_referenced_parts(self, src_part, dst_part, element):
+        rid_elements = xpath(element, './/*[@r:id]')
+        for rid_element in rid_elements:
+            rid = rid_element.get('{%s}id' % NS['r'])
+            rel = src_part.rels[rid]
+            if rel.reltype in REFERENCED_PARTS_IGNORED_RELTYPES:
+                continue
+            new_rel = self.add_relationship(src_part, dst_part, rel)
+            rid_element.set('{%s}id' % NS['r'], new_rel.rId)
+
+    def add_relationship(self, src_part, dst_part, relationship):
+        """Add relationship and it's target part"""
+        if relationship.is_external:
+            new_rid = dst_part.rels.get_or_add_ext_rel(
+                    relationship.reltype, relationship.target_ref)
+            return dst_part.rels[new_rid]
+
+        part = relationship.target_part
+
+        # Determine next partname
+        name = FILENAME_IDX_RE.match(part.partname).group(1)
+        used_part_numbers = [
+            FILENAME_IDX_RE.match(p.partname).group(2)
+            for p in dst_part.package.iter_parts()
+            if p.partname.startswith(name)
+        ]
+        used_part_numbers = [
+            int(idx) for idx in used_part_numbers if idx is not None]
+
+        for n in range(1, len(used_part_numbers)+2):
+            if n not in used_part_numbers:
+                next_part_number = n
+                break
+        next_partname = PackURI('%s%d.%s' % (
+            name, next_part_number, part.partname.ext))
+
+        new_part = Part(
+            next_partname, part.content_type, part.blob,
+            dst_part.package)
+        new_rel = dst_part.rels.get_or_add(relationship.reltype, new_part)
+
+        # Sort relationships by rId to get the same rId when adding them to the
+        # new part. This avoids fixing references.
+        def sort_key(r):
+            match = RID_IDX_RE.match(r.rId)
+            return int(match.group(1))
+
+        for rel in sorted(part.rels.values(), key=sort_key):
+            self.add_relationship(part, new_part, rel)
+
+        return new_rel
+
     def add_images(self, doc, element):
         """Add images from the given document used in the given element."""
         blips = xpath(
-            element,
-            '(.//w:drawing/wp:anchor|.//w:drawing/wp:inline)'
-            '/a:graphic/a:graphicData//pic:pic/pic:blipFill/a:blip')
+            element, '(.//a:blip|.//asvg:svgBlip)[@r:embed]')
         for blip in blips:
             rid = blip.get('{%s}embed' % NS['r'])
             img_part = doc.part.rels[rid].target_part
@@ -109,30 +176,6 @@ class Composer(object):
             new_rid = self.doc.part.relate_to(new_img_part, RT.IMAGE)
             shape.set('{%s}id' % NS['r'], new_rid)
 
-            ole_objects = xpath(shape.getparent().getparent(), './/o:OLEObject')
-            for ole_object in ole_objects:
-                rid = ole_object.get('{%s}id' % NS['r'])
-                ole_part = doc.part.rels[rid].target_part
-
-                partname = self._next_ole_object_partname(ole_part.partname.ext)
-                content_type = CT.OFC_OLE_OBJECT
-                new_ole_part = Part(
-                    partname, content_type, ole_part._blob, self.pkg)
-
-                new_rid = self.doc.part.relate_to(new_ole_part, RT.OLE_OBJECT)
-                ole_object.set('{%s}id' % NS['r'], new_rid)
-
-    def _next_ole_object_partname(self, ext):
-        def ole_object_partname(n):
-            return PackURI('/word/embeddings/oleObject%d.%s' % (n, ext))
-        used_numbers = [
-            part.partname.idx for part in self.pkg.iter_parts()
-            if part.content_type == CT.OFC_OLE_OBJECT]
-        for n in range(1, len(used_numbers)+1):
-            if n not in used_numbers:
-                return ole_object_partname(n)
-        return ole_object_partname(len(used_numbers)+1)
-
     def add_footnotes(self, doc, element):
         """Add footnotes from the given document used in the given element."""
         footnotes_refs = element.findall('.//w:footnoteReference', NS)
@@ -155,7 +198,8 @@ class Composer(object):
             footnote.set('{%s}id' % NS['w'], str(next_id))
             ref.set('{%s}id' % NS['w'], str(next_id))
             next_id += 1
-            self.add_hyperlinks(footnote_part, my_footnote_part, element)
+
+        self.add_referenced_parts(footnote_part, my_footnote_part, element)
 
         my_footnote_part._blob = serialize_part_xml(footnotes)
 
@@ -189,11 +233,21 @@ class Composer(object):
         self._style_id2name = {s.style_id: s.name for s in doc.styles}
         self._style_name2id = {s.name: s.style_id for s in self.doc.styles}
 
+    def add_styles_from_other_parts(self, doc):
+        for reltype in PART_RELTYPES_WITH_STYLES:
+            try:
+                el = parse_xml(doc.part.rels.part_with_reltype(reltype).blob)
+            except (KeyError, ValueError):
+                pass
+            else:
+                self.add_styles(doc, el)
+
     def add_styles(self, doc, element):
         """Add styles from the given document used in the given element."""
         our_style_ids = [s.style_id for s in self.doc.styles]
-        used_style_ids = set([e.val for e in xpath(
-            element, './/w:tblStyle|.//w:pStyle|.//w:rStyle')])
+        # de-duplicate ids and keep order to make sure tests are not flaky
+        used_style_ids = list(OrderedDict.fromkeys([e.val for e in xpath(
+            element, './/w:tblStyle|.//w:pStyle|.//w:rStyle')]))
 
         for style_id in used_style_ids:
             our_style_id = self.mapped_style_id(style_id)
