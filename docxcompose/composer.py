@@ -77,7 +77,6 @@ class Composer(object):
             self.remove_header_and_footer_references(doc, element)
             # self.add_headers(doc, element)
             # self.add_footers(doc, element)
-            self.add_hyperlinks(doc.part, self.doc.part, element)
             index += 1
 
         self.add_styles_from_other_parts(doc)
@@ -495,19 +494,6 @@ class Composer(object):
                 '<w:ilvl w:val="0"/><w:numId w:val="%s"/></w:numPr>' % next_num_id)
             paragraph_props[0].append(num_pr)
         self._numbering_restarted.add(style_id)
-
-    def add_hyperlinks(self, src_part, dst_part, element):
-        """Add hyperlinks from src_part referenced in element to dst_part."""
-        hyperlink_refs = xpath(element, './/w:hyperlink')
-        for hyperlink_ref in hyperlink_refs:
-            rid = hyperlink_ref.get('{%s}id' % NS['r'])
-            if rid is None:
-                continue
-            rel = src_part.rels[rid]
-            if rel.is_external:
-                new_rid = dst_part.rels.get_or_add_ext_rel(
-                    rel.reltype, rel.target_ref)
-                hyperlink_ref.set('{%s}id' % NS['r'], new_rid)
 
     def add_headers(self, doc, element):
         header_refs = xpath(element, './/w:headerReference')
