@@ -5,7 +5,7 @@ Changelog
 1.0.0a15 (unreleased)
 ---------------------
 
-- Nothing changed yet.
+- Fix updating doc-properties with non-ascii names. [deiferni]
 
 
 1.0.0a14 (2018-12-04)
