@@ -5,6 +5,7 @@ from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from docx.oxml import parse_xml
 from docx.oxml.coreprops import CT_CoreProperties
 from docxcompose.utils import xpath
+from six import text_type
 
 
 class CustomProperties(object):
@@ -62,7 +63,7 @@ class CustomProperties(object):
         elif isinstance(value, datetime):
             value = value.strftime('%x')
         else:
-            value = unicode(value)
+            value = text_type(value)
 
         # Simple field
         sfield = xpath(
