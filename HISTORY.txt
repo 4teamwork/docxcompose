@@ -6,6 +6,7 @@ Changelog
 ---------------------
 
 - Fix updating doc-properties with non-ascii names. [deiferni]
+- Don't handle hyperlink references twice. [deiferni]
 
 
 1.0.0a14 (2018-12-04)
