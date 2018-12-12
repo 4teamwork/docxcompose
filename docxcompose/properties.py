@@ -5,6 +5,7 @@ from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from docx.oxml import parse_xml
 from docx.oxml.coreprops import CT_CoreProperties
 from docxcompose.utils import xpath
+from six import text_type
 
 
 class CustomProperties(object):
@@ -27,26 +28,26 @@ class CustomProperties(object):
         if self._element is None:
             return dict()
 
-        props = xpath(self._element, './/cp:property')
+        props = xpath(self._element, u'.//cp:property')
         return {prop.get('name'): prop[0].text for prop in props}
 
     def get(self, name):
         """Get the value of a property."""
         prop = xpath(
             self._element,
-            './/cp:property[@name="{}"]'.format(name))
+            u'.//cp:property[@name="{}"]'.format(name))
         if prop:
             value = list(prop[0])[0]
-            if value.tag.endswith('}lpwstr'):
+            if value.tag.endswith(u'}lpwstr'):
                 return value.text
-            elif value.tag.endswith('}i4'):
+            elif value.tag.endswith(u'}i4'):
                 return int(value.text)
-            elif value.tag.endswith('}bool'):
-                if value.text.lower() == 'true':
+            elif value.tag.endswith(u'}bool'):
+                if value.text.lower() == u'true':
                     return True
                 else:
                     return False
-            elif value.tag.endswith('}filetime'):
+            elif value.tag.endswith(u'}filetime'):
                 return CT_CoreProperties._parse_W3CDTF_to_datetime(value.text)
 
     def update_all(self):
@@ -58,16 +59,16 @@ class CustomProperties(object):
         """Update a property field value."""
         value = self.get(name)
         if isinstance(value, bool):
-            value = 'Y' if value else 'N'
+            value = u'Y' if value else u'N'
         elif isinstance(value, datetime):
             value = value.strftime('%x')
         else:
-            value = unicode(value)
+            value = text_type(value)
 
         # Simple field
         sfield = xpath(
             self.doc.element.body,
-            './/w:fldSimple[contains(@w:instr, \'DOCPROPERTY "{}"\')]'.format(name))
+            u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "{}"\')]'.format(name))
         if sfield:
             text = xpath(sfield[0], './/w:t')
             if text:
@@ -76,14 +77,14 @@ class CustomProperties(object):
         # Complex field
         cfield = xpath(
             self.doc.element.body,
-            './/w:instrText[contains(.,\'DOCPROPERTY "{}"\')]'.format(name))
+            u'.//w:instrText[contains(.,\'DOCPROPERTY "{}"\')]'.format(name))
         if cfield:
             runs = xpath(
                 cfield[0].getparent().getparent(),
-                './/w:r[following-sibling::w:r/w:fldChar/@w:fldCharType="end"'
-                ' and preceding-sibling::w:r/w:fldChar/@w:fldCharType="separate"]')
+                u'.//w:r[following-sibling::w:r/w:fldChar/@w:fldCharType="end"'
+                u' and preceding-sibling::w:r/w:fldChar/@w:fldCharType="separate"]')
             if runs:
-                text = xpath(runs[0], './/w:t')
+                text = xpath(runs[0], u'.//w:t')
                 if text:
                     text[0].text = value
                 if len(text) > 1:
@@ -95,7 +96,7 @@ class CustomProperties(object):
         # Simple field
         sfield = xpath(
             self.doc.element.body,
-            './/w:fldSimple[contains(@w:instr, \'DOCPROPERTY "{}"\')]'.format(name))
+            u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "{}"\')]'.format(name))
         if sfield:
             sfield = sfield[0]
             parent = sfield.getparent()
@@ -107,7 +108,7 @@ class CustomProperties(object):
         # Complex field
         cfield = xpath(
             self.doc.element.body,
-            './/w:instrText[contains(.,\'DOCPROPERTY "{}"\')]'.format(name))
+            u'.//w:instrText[contains(.,\'DOCPROPERTY "{}"\')]'.format(name))
         if cfield:
             w_p = cfield[0].getparent().getparent()
             # Create list of <w:r> nodes for removal
@@ -115,12 +116,12 @@ class CustomProperties(object):
             # and <w:fldChar w:fldCharType="separate"/> including boundaries.
             w_rs = xpath(
                 w_p,
-                './/w:r[following-sibling::w:r/w:fldChar/@w:fldCharType="separate" '
-                'and preceding-sibling::w:r/w:fldChar/@w:fldCharType="begin" '
-                'or self::w:r/w:fldChar/@w:fldCharType="begin" '
-                'or self::w:r/w:fldChar/@w:fldCharType="separate"]')
+                u'.//w:r[following-sibling::w:r/w:fldChar/@w:fldCharType="separate" '
+                u'and preceding-sibling::w:r/w:fldChar/@w:fldCharType="begin" '
+                u'or self::w:r/w:fldChar/@w:fldCharType="begin" '
+                u'or self::w:r/w:fldChar/@w:fldCharType="separate"]')
             # Also include <w:r><w:fldChar w:fldCharType="separate"/></w:r>
             w_rs.extend(xpath(
-                w_p, './/w:r/w:fldChar[@w:fldCharType="end"]/parent::w:r'))
+                w_p, u'.//w:r/w:fldChar[@w:fldCharType="end"]/parent::w:r'))
             for w_r in w_rs:
                 w_p.remove(w_r)
