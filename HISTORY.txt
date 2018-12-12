@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.0.0a15 (unreleased)
+1.0.0a15 (2018-12-12)
 ---------------------
 
 - Fix updating doc-properties with non-ascii names. [deiferni]
