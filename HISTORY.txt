@@ -5,7 +5,7 @@ Changelog
 1.0.0a16 (unreleased)
 ---------------------
 
-- Nothing changed yet.
+- Prevent artifacts of previously cached doc property values during update. [deiferni]
 
 
 1.0.0a15 (2018-12-12)

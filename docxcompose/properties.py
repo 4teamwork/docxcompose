@@ -1,4 +1,3 @@
-from __future__ import print_function
 from copy import deepcopy
 from datetime import datetime
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
@@ -79,16 +78,35 @@ class CustomProperties(object):
             self.doc.element.body,
             u'.//w:instrText[contains(.,\'DOCPROPERTY "{}"\')]'.format(name))
         if cfield:
+            w_p = cfield[0].getparent().getparent()
             runs = xpath(
-                cfield[0].getparent().getparent(),
+                w_p,
                 u'.//w:r[following-sibling::w:r/w:fldChar/@w:fldCharType="end"'
                 u' and preceding-sibling::w:r/w:fldChar/@w:fldCharType="separate"]')
             if runs:
-                text = xpath(runs[0], u'.//w:t')
+                first_w_r = runs[0]
+                text = xpath(first_w_r, u'.//w:t')
                 if text:
                     text[0].text = value
-                if len(text) > 1:
-                    print("Warning! Multiple Textnodes")
+                # remove any additional text-nodes inside the first run. we
+                # update the first text-node only with the full cached
+                # docproperty value. if for some reason the initial cached
+                # value is split into multiple text nodes we remove any
+                # additional node after updating the first node.
+                for unnecessary_w_t in text[1:]:
+                    first_w_r.remove(unnecessary_w_t)
+
+                # if there are multiple runs between "separate" and "end" they
+                # all may contain a piece of the cached docproperty value. we
+                # can't reliably handle this situation and only update the
+                # first node in the first run with the full cached value. it
+                # appears any additional runs with text nodes should then be
+                # removed to avoid duplicating parts of the cached docproperty
+                # value.
+                for w_r in runs[1:]:
+                    text = xpath(w_r, u'.//w:t')
+                    if text:
+                        w_p.remove(w_r)
 
     def remove_field(self, name):
         """Remove the property field but keep it's value."""
