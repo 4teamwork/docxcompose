@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.0.0a16 (unreleased)
+1.0.0a16 (2019-01-15)
 ---------------------
 
 - Prevent artifacts of previously cached doc property values during update. [deiferni]
