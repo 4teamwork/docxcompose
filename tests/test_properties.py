@@ -23,6 +23,25 @@ def test_updates_doc_properties_with_umlauts():
     assert u'j\xe4ja.' == text[0].text
 
 
+def test_updates_doc_properties_without_quotes():
+    document = Document(docx_path('outdated_docproperty_without_quotes.docx'))
+    paragraphs = xpath(document.element.body, '//w:p')
+    assert 1 == len(paragraphs), 'input file contains one paragraph'
+    assert 1 == len(xpath(document.element.body, '//w:instrText')), \
+        'input contains one complex field docproperty'
+    w_p = paragraphs[0]
+    cached_value = xpath(w_p, XPATH_CACHED_DOCPROPERTY_VALUES)
+    assert 1 == len(cached_value), 'doc property value is in one part'
+    assert 'someval' == cached_value[0].text
+
+    CustomProperties(document).update_all()
+
+    w_p = xpath(document.element.body, '//w:p')[0]
+    cached_value = xpath(w_p, XPATH_CACHED_DOCPROPERTY_VALUES)
+    assert 1 == len(cached_value), 'should have one doc property value'
+    assert 'newval' == cached_value[0].text
+
+
 def test_complex_docprop_fields_with_multiple_textnodes_are_updated():
     document = Document(docx_path('spellchecked_docproperty.docx'))
     paragraphs = xpath(document.element.body, '//w:p')
