@@ -27,12 +27,14 @@ class ComparableDocument(object):
 
     def __eq__(self, other):
         self.has_neq_partnames = self.partnames != other.partnames
+        other.has_neq_partnames = self.has_neq_partnames
         if self.has_neq_partnames:
             return False
 
         for my_part, other_part in zip(self.parts, other.parts):
             if my_part.blob != other_part.blob:
                 self.neq_parts.append((my_part, other_part))
+                other.neq_parts.append((other_part, my_part))
         if self.neq_parts:
             return False
 

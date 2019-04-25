@@ -5,7 +5,9 @@ Changelog
 1.0.0a17 (unreleased)
 ---------------------
 
-- Nothing changed yet.
+- Add functionality to get and set content of plain text content controls
+  (structured document tags).
+  [buchi]
 
 
 1.0.0a16 (2019-01-15)
