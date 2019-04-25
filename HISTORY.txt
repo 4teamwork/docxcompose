@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.0.0a17 (unreleased)
+1.0.0a17 (2019-04-25)
 ---------------------
 
 - Add functionality to get and set content of plain text content controls
