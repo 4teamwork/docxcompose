@@ -3,8 +3,58 @@ from datetime import datetime
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from docx.oxml import parse_xml
 from docx.oxml.coreprops import CT_CoreProperties
+from docxcompose.utils import NS
 from docxcompose.utils import xpath
+from six import string_types
 from six import text_type
+
+
+CUSTOM_PROPERTY_FMTID = '{D5CDD505-2E9C-101B-9397-08002B2CF9AE}'
+CUSTOM_PROPERTY_TYPES = {
+    'text': '<vt:lpwstr xmlns:vt="{}"/>'.format(NS['vt']),
+    'int': '<vt:i4 xmlns:vt="{}"/>'.format(NS['vt']),
+    'bool': '<vt:bool xmlns:vt="{}"/>'.format(NS['vt']),
+    'datetime': '<vt:filetime xmlns:vt="{}"/>'.format(NS['vt']),
+    'float': '<vt:r8 xmlns:vt="{}"/>'.format(NS['vt']),
+}
+
+
+def value2vt(value):
+    if isinstance(value, bool):
+        el = parse_xml(CUSTOM_PROPERTY_TYPES['bool'])
+        el.text = 'true' if value else 'false'
+    elif isinstance(value, int):
+        el = parse_xml(CUSTOM_PROPERTY_TYPES['int'])
+        el.text = text_type(value)
+    elif isinstance(value, float):
+        el = parse_xml(CUSTOM_PROPERTY_TYPES['float'])
+        el.text = text_type(value)
+    elif isinstance(value, datetime):
+        el = parse_xml(CUSTOM_PROPERTY_TYPES['datetime'])
+        el.text = value.strftime('%Y-%m-%dT%H:%M:%SZ')
+    elif isinstance(value, string_types):
+        el = parse_xml(CUSTOM_PROPERTY_TYPES['text'])
+        el.text = value
+    else:
+        raise TypeError('Unsupported type {}'.format(type(value)))
+    return el
+
+
+def vt2value(element):
+    tag = element.tag.split('}')[-1]
+    if tag == 'bool':
+        if element.text.lower() == u'true':
+            return True
+        else:
+            return False
+    elif tag in ['i1', 'i2', 'i4', 'int', 'ui1', 'ui2', 'ui4', 'uint']:
+        return int(element.text)
+    elif tag in ['r4', 'r8']:
+        return float(element.text)
+    elif tag == 'filetime':
+        return CT_CoreProperties._parse_W3CDTF_to_datetime(element.text)
+    else:
+        return element.text
 
 
 class CustomProperties(object):
@@ -28,7 +78,7 @@ class CustomProperties(object):
             return dict()
 
         props = xpath(self._element, u'.//cp:property')
-        return {prop.get('name'): prop[0].text for prop in props}
+        return {prop.get('name'): vt2value(prop[0]) for prop in props}
 
     def get(self, name):
         """Get the value of a property."""
@@ -36,27 +86,59 @@ class CustomProperties(object):
             self._element,
             u'.//cp:property[@name="{}"]'.format(name))
         if prop:
-            value = list(prop[0])[0]
-            if value.tag.endswith(u'}lpwstr'):
-                return value.text
-            elif value.tag.endswith(u'}i4'):
-                return int(value.text)
-            elif value.tag.endswith(u'}bool'):
-                if value.text.lower() == u'true':
-                    return True
-                else:
-                    return False
-            elif value.tag.endswith(u'}filetime'):
-                return CT_CoreProperties._parse_W3CDTF_to_datetime(value.text)
+            return vt2value(prop[0][0])
+
+    def set(self, name, value):
+        """Set the value of a property."""
+        prop = xpath(
+            self._element,
+            u'.//cp:property[@name="{}"]'.format(name))
+        if not prop:
+            return self.add(name, value)
+
+        el = prop[0][0]
+        new_el = value2vt(value)
+        el.getparent().replace(el, new_el)
+
+    def add(self, name, value):
+        """Add a property."""
+        pids = [int(pid) for pid in xpath(self._element, u'.//cp:property/@pid')]
+        pid = max(pids) + 1
+        # pids start with 2 !?
+        if pid < 2:
+            pid = 2
+        prop = parse_xml('<cp:property xmlns:cp="{}"/>'.format(NS['cp']))
+        prop.set('fmtid', CUSTOM_PROPERTY_FMTID)
+        prop.set('name', name)
+        prop.set('pid', text_type(pid))
+        value_el = value2vt(value)
+        prop.append(value_el)
+        self._element.append(prop)
+
+    def delete(self, name):
+        """Delete a property."""
+        prop = xpath(
+            self._element,
+            u'.//cp:property[@name="{}"]'.format(name))
+        if prop:
+            prop[0].getparent().remove(prop[0])
+            # Renumber pids
+            pid = 2
+            for prop in self._element:
+                prop.set('pid', text_type(pid))
+                pid += 1
+
+    def set_properties(self, properties):
+        for name, value in properties.items():
+            self.set(name, value)
 
     def update_all(self):
         """Update all the document's doc-properties."""
-        for name in self.dict().keys():
-            self.update(name)
+        for name, value in self.dict().items():
+            self.update(name, value)
 
-    def update(self, name):
+    def update(self, name, value):
         """Update a property field value."""
-        value = self.get(name)
         if isinstance(value, bool):
             value = u'Y' if value else u'N'
         elif isinstance(value, datetime):

@@ -1,3 +1,4 @@
+from datetime import datetime
 from docx import Document
 from docxcompose.properties import CustomProperties
 from docxcompose.utils import xpath
@@ -66,3 +67,60 @@ def test_complex_docprop_with_multiple_textnode_in_same_run_are_updated():
     assert 1 == len(cached_value), \
         'doc property value has been reset to one cached value'
     assert 'i will be spllchecked!' == cached_value[0].text
+
+
+def test_get_doc_properties():
+    document = Document(docx_path('docproperties.docx'))
+    props = CustomProperties(document)
+
+    assert props.get('Text Property') == 'Foo Bar'
+    assert props.get('Number Property') == 123
+    assert props.get('Boolean Property') is True
+    assert props.get('Date Property') == datetime(2019, 6, 11, 10, 0)
+
+
+def test_add_doc_properties():
+    document = Document(docx_path('docproperties.docx'))
+    props = CustomProperties(document)
+
+    props.add('My Text Property', 'foo bar')
+    assert props.get('My Text Property') == 'foo bar'
+
+    props.add('My Boolean Property', True)
+    assert props.get('My Boolean Property') is True
+
+    props.add('My Number Property', 123)
+    assert props.get('My Number Property') == 123
+
+    props.add('My Date Property', datetime(2019, 10, 23, 15, 44, 50))
+    assert props.get('My Date Property') == datetime(2019, 10, 23, 15, 44, 50)
+
+
+def test_set_doc_properties():
+    document = Document(docx_path('docproperties.docx'))
+    props = CustomProperties(document)
+
+    props.set('Text Property', 'baz')
+    assert props.get('Text Property') == 'baz'
+
+    props.set('Boolean Property', False)
+    assert props.get('Boolean Property') is False
+
+    props.set('Number Property', 456)
+    assert props.get('Number Property') == 456
+
+    props.set('Date Property', datetime(2019, 10, 20, 12, 0))
+    assert props.get('Date Property') == datetime(2019, 10, 20, 12, 0)
+
+
+def test_delete_doc_properties():
+    document = Document(docx_path('docproperties.docx'))
+    props = CustomProperties(document)
+
+    props.delete('Text Property')
+    props.delete('Number Property')
+
+    assert 'Text Property' not in props.dict()
+    assert 'Number Property' not in props.dict()
+
+    assert xpath(props._element, u'.//cp:property/@pid') == ['2', '3', '4']
