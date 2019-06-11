@@ -1,5 +1,6 @@
 from datetime import datetime
 from docx import Document
+from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from docxcompose.properties import CustomProperties
 from docxcompose.utils import xpath
 from utils import docx_path
@@ -124,3 +125,15 @@ def test_delete_doc_properties():
     assert 'Number Property' not in props.dict()
 
     assert xpath(props._element, u'.//cp:property/@pid') == ['2', '3', '4']
+
+
+def test_set_doc_property_on_document_without_properties_creates_new_part():
+    document = Document(docx_path('master.docx'))
+    props = CustomProperties(document)
+    props.set('Text Property', 'Foo')
+
+    assert props.part is not None
+    assert props.get('Text Property') == 'Foo'
+
+    part = document.part.package.part_related_by(RT.CUSTOM_PROPERTIES)
+    assert part is not None

@@ -1,12 +1,17 @@
 from copy import deepcopy
 from datetime import datetime
+from docx.opc.constants import CONTENT_TYPE as CT
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
+from docx.opc.oxml import serialize_part_xml
+from docx.opc.packuri import PackURI
+from docx.opc.part import Part
 from docx.oxml import parse_xml
 from docx.oxml.coreprops import CT_CoreProperties
 from docxcompose.utils import NS
 from docxcompose.utils import xpath
 from six import string_types
 from six import text_type
+import os.path
 
 
 CUSTOM_PROPERTY_FMTID = '{D5CDD505-2E9C-101B-9397-08002B2CF9AE}'
@@ -63,14 +68,34 @@ class CustomProperties(object):
     """
     def __init__(self, doc):
         self.doc = doc
+        self.part = None
         self._element = None
 
         try:
             part = doc.part.package.part_related_by(RT.CUSTOM_PROPERTIES)
         except KeyError:
-            pass
+            self._element = parse_xml(self._part_template())
         else:
+            self.part = part
             self._element = parse_xml(part.blob)
+
+    def _part_template(self):
+        template_path = os.path.join(
+            os.path.dirname(__file__), 'templates', 'custom.xml')
+        with open(template_path, 'rb') as f:
+            return f.read()
+
+    def _update_part(self):
+        if self.part is None:
+            # Create a new part for custom properties
+            partname = PackURI('/docProps/custom.xml')
+            self.part = Part(
+                partname, CT.OFC_CUSTOM_PROPERTIES,
+                serialize_part_xml(self._element), self.doc.part.package)
+            self.doc.part.package.relate_to(self.part, RT.CUSTOM_PROPERTIES)
+            self._element = parse_xml(self.part.blob)
+        else:
+            self.part._blob = serialize_part_xml(self._element)
 
     def dict(self):
         """Returns a dict with all custom doc properties"""
@@ -100,12 +125,15 @@ class CustomProperties(object):
         new_el = value2vt(value)
         el.getparent().replace(el, new_el)
 
+        self._update_part()
+
     def add(self, name, value):
         """Add a property."""
         pids = [int(pid) for pid in xpath(self._element, u'.//cp:property/@pid')]
-        pid = max(pids) + 1
-        # pids start with 2 !?
-        if pid < 2:
+        if pids:
+            pid = max(pids) + 1
+        else:
+            # pids start with 2 !?
             pid = 2
         prop = parse_xml('<cp:property xmlns:cp="{}"/>'.format(NS['cp']))
         prop.set('fmtid', CUSTOM_PROPERTY_FMTID)
@@ -114,6 +142,8 @@ class CustomProperties(object):
         value_el = value2vt(value)
         prop.append(value_el)
         self._element.append(prop)
+
+        self._update_part()
 
     def delete(self, name):
         """Delete a property."""
@@ -127,6 +157,8 @@ class CustomProperties(object):
             for prop in self._element:
                 prop.set('pid', text_type(pid))
                 pid += 1
+
+        self._update_part()
 
     def set_properties(self, properties):
         for name, value in properties.items():
