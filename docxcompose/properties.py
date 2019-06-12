@@ -97,35 +97,64 @@ class CustomProperties(object):
         else:
             self.part._blob = serialize_part_xml(self._element)
 
-    def dict(self):
-        """Returns a dict with all custom doc properties"""
-        if self._element is None:
-            return dict()
-
-        props = xpath(self._element, u'.//cp:property')
-        return {prop.get('name'): vt2value(prop[0]) for prop in props}
-
-    def get(self, name):
+    def __getitem__(self, key):
         """Get the value of a property."""
         prop = xpath(
             self._element,
-            u'.//cp:property[@name="{}"]'.format(name))
-        if prop:
-            return vt2value(prop[0][0])
+            u'.//cp:property[@name="{}"]'.format(key))
 
-    def set(self, name, value):
+        if not prop:
+            raise KeyError(key)
+
+        return vt2value(prop[0][0])
+
+    def __setitem__(self, key, value):
         """Set the value of a property."""
         prop = xpath(
             self._element,
-            u'.//cp:property[@name="{}"]'.format(name))
+            u'.//cp:property[@name="{}"]'.format(key))
         if not prop:
-            return self.add(name, value)
+            self.add(key, value)
+            return
 
         el = prop[0][0]
         new_el = value2vt(value)
         el.getparent().replace(el, new_el)
 
         self._update_part()
+
+    def __delitem__(self, key):
+        """Delete a property."""
+        prop = xpath(
+            self._element,
+            u'.//cp:property[@name="{}"]'.format(key))
+
+        if not prop:
+            raise KeyError(key)
+
+        prop[0].getparent().remove(prop[0])
+        # Renumber pids
+        pid = 2
+        for prop in self._element:
+            prop.set('pid', text_type(pid))
+            pid += 1
+
+        self._update_part()
+
+    def __contains__(self, item):
+        prop = xpath(
+            self._element,
+            u'.//cp:property[@name="{}"]'.format(item))
+        if prop:
+            return True
+        else:
+            return False
+
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            return default
 
     def add(self, name, value):
         """Add a property."""
@@ -145,20 +174,26 @@ class CustomProperties(object):
 
         self._update_part()
 
-    def delete(self, name):
-        """Delete a property."""
-        prop = xpath(
-            self._element,
-            u'.//cp:property[@name="{}"]'.format(name))
-        if prop:
-            prop[0].getparent().remove(prop[0])
-            # Renumber pids
-            pid = 2
-            for prop in self._element:
-                prop.set('pid', text_type(pid))
-                pid += 1
+    def keys(self):
+        if self._element is None:
+            return []
 
-        self._update_part()
+        props = xpath(self._element, u'.//cp:property')
+        return [prop.get('name') for prop in props]
+
+    def values(self):
+        if self._element is None:
+            return []
+
+        props = xpath(self._element, u'.//cp:property')
+        return [vt2value(prop[0]) for prop in props]
+
+    def items(self):
+        if self._element is None:
+            return []
+
+        props = xpath(self._element, u'.//cp:property')
+        return [(prop.get('name'), vt2value(prop[0])) for prop in props]
 
     def set_properties(self, properties):
         for name, value in properties.items():
@@ -166,7 +201,7 @@ class CustomProperties(object):
 
     def update_all(self):
         """Update all the document's doc-properties."""
-        for name, value in self.dict().items():
+        for name, value in self.items():
             self.update(name, value)
 
     def update(self, name, value):
