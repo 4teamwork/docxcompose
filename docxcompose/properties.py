@@ -9,6 +9,7 @@ from docx.oxml import parse_xml
 from docx.oxml.coreprops import CT_CoreProperties
 from docxcompose.utils import NS
 from docxcompose.utils import xpath
+from lxml.etree import QName
 from six import string_types
 from six import text_type
 import pkg_resources
@@ -47,7 +48,7 @@ def value2vt(value):
 
 
 def vt2value(element):
-    tag = element.tag.split('}')[-1]
+    tag = QName(element).localname
     if tag == 'bool':
         if element.text.lower() == u'true':
             return True
