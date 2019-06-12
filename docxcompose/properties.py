@@ -98,40 +98,40 @@ class CustomProperties(object):
 
     def __getitem__(self, key):
         """Get the value of a property."""
-        prop = xpath(
+        props = xpath(
             self._element,
             u'.//cp:property[@name="{}"]'.format(key))
 
-        if not prop:
+        if not props:
             raise KeyError(key)
 
-        return vt2value(prop[0][0])
+        return vt2value(props[0][0])
 
     def __setitem__(self, key, value):
         """Set the value of a property."""
-        prop = xpath(
+        props = xpath(
             self._element,
             u'.//cp:property[@name="{}"]'.format(key))
-        if not prop:
+        if not props:
             self.add(key, value)
             return
 
-        el = prop[0][0]
-        new_el = value2vt(value)
-        el.getparent().replace(el, new_el)
+        value_el = props[0][0]
+        new_value_el = value2vt(value)
+        value_el.getparent().replace(value_el, new_value_el)
 
         self._update_part()
 
     def __delitem__(self, key):
         """Delete a property."""
-        prop = xpath(
+        props = xpath(
             self._element,
             u'.//cp:property[@name="{}"]'.format(key))
 
-        if not prop:
+        if not props:
             raise KeyError(key)
 
-        prop[0].getparent().remove(prop[0])
+        props[0].getparent().remove(props[0])
         # Renumber pids
         pid = MIN_PID
         for prop in self._element:
@@ -141,10 +141,10 @@ class CustomProperties(object):
         self._update_part()
 
     def __contains__(self, item):
-        prop = xpath(
+        props = xpath(
             self._element,
             u'.//cp:property[@name="{}"]'.format(item))
-        if prop:
+        if props:
             return True
         else:
             return False
