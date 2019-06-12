@@ -11,7 +11,7 @@ from docxcompose.utils import NS
 from docxcompose.utils import xpath
 from six import string_types
 from six import text_type
-import os.path
+import pkg_resources
 
 
 CUSTOM_PROPERTY_FMTID = '{D5CDD505-2E9C-101B-9397-08002B2CF9AE}'
@@ -81,10 +81,8 @@ class CustomProperties(object):
             self._element = parse_xml(part.blob)
 
     def _part_template(self):
-        template_path = os.path.join(
-            os.path.dirname(__file__), 'templates', 'custom.xml')
-        with open(template_path, 'rb') as f:
-            return f.read()
+        return pkg_resources.resource_string(
+            'docxcompose', 'templates/custom.xml')
 
     def _update_part(self):
         if self.part is None:
