@@ -22,6 +22,7 @@ CUSTOM_PROPERTY_TYPES = {
     'datetime': '<vt:filetime xmlns:vt="{}"/>'.format(NS['vt']),
     'float': '<vt:r8 xmlns:vt="{}"/>'.format(NS['vt']),
 }
+MIN_PID = 2  # Property IDs have to start with 2
 
 
 def value2vt(value):
@@ -134,7 +135,7 @@ class CustomProperties(object):
 
         prop[0].getparent().remove(prop[0])
         # Renumber pids
-        pid = 2
+        pid = MIN_PID
         for prop in self._element:
             prop.set('pid', text_type(pid))
             pid += 1
@@ -162,8 +163,7 @@ class CustomProperties(object):
         if pids:
             pid = max(pids) + 1
         else:
-            # pids start with 2 !?
-            pid = 2
+            pid = MIN_PID
         prop = parse_xml('<cp:property xmlns:cp="{}"/>'.format(NS['cp']))
         prop.set('fmtid', CUSTOM_PROPERTY_FMTID)
         prop.set('name', name)
