@@ -57,7 +57,7 @@ class Composer(object):
         # Remove custom property fields but keep the values
         if remove_property_fields:
             cprops = CustomProperties(doc)
-            for name in cprops.dict().keys():
+            for name in cprops.keys():
                 cprops.remove_field(name)
 
         self._create_style_id_mapping(doc)

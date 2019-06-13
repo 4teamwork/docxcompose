@@ -8,6 +8,9 @@ Changelog
 - Change license from GPL to MIT.
   [buchi]
 
+- Add support for adding, setting and deleting of doc properties.
+  [buchi]
+
 
 1.0.0a17 (2019-04-25)
 ---------------------
