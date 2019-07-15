@@ -13,6 +13,7 @@ from lxml.etree import QName
 from six import string_types
 from six import text_type
 import pkg_resources
+import re
 
 
 CUSTOM_PROPERTY_FMTID = '{D5CDD505-2E9C-101B-9397-08002B2CF9AE}'
@@ -198,63 +199,43 @@ class CustomProperties(object):
         for name, value in properties.items():
             self.set(name, value)
 
+    def find_docprops_in_document(self, name=None):
+        """This method searches for all doc-properties in the document
+        """
+        # First we search for the simple fields:
+        sfield_nodes = xpath(
+            self.doc.element.body,
+            u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY \')]')
+
+        docprops = [SimpleField(sfield_node) for sfield_node in sfield_nodes]
+
+        # Now for the complex fields
+        cfield_nodes = xpath(
+            self.doc.element.body,
+            u'.//w:instrText[contains(.,\'DOCPROPERTY \')]')
+
+        docprops.extend([ComplexField(cfield_node) for cfield_node in cfield_nodes])
+
+        if name is not None:
+            docprops = filter(lambda prop: prop.name == name, docprops)
+        return docprops
+
     def update_all(self):
         """Update all the document's doc-properties."""
-        for name, value in self.items():
-            self.update(name, value)
+        docprops = self.find_docprops_in_document()
+        available_docprops = dict(self.items())
+
+        for docprop in docprops:
+            value = available_docprops.get(docprop.name)
+            if value is None:
+                continue
+            docprop.update(value)
 
     def update(self, name, value):
-        """Update a property field value."""
-        if isinstance(value, bool):
-            value = u'Y' if value else u'N'
-        elif isinstance(value, datetime):
-            value = value.strftime('%x')
-        else:
-            value = text_type(value)
-
-        # Simple field
-        sfield = xpath(
-            self.doc.element.body,
-            u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "{}"\')]'.format(name))
-        if sfield:
-            text = xpath(sfield[0], './/w:t')
-            if text:
-                text[0].text = value
-
-        # Complex field
-        cfield = xpath(
-            self.doc.element.body,
-            u'.//w:instrText[contains(.,\'DOCPROPERTY "{}"\')]'.format(name))
-        if cfield:
-            w_p = cfield[0].getparent().getparent()
-            runs = xpath(
-                w_p,
-                u'.//w:r[following-sibling::w:r/w:fldChar/@w:fldCharType="end"'
-                u' and preceding-sibling::w:r/w:fldChar/@w:fldCharType="separate"]')
-            if runs:
-                first_w_r = runs[0]
-                text = xpath(first_w_r, u'.//w:t')
-                if text:
-                    text[0].text = value
-                # remove any additional text-nodes inside the first run. we
-                # update the first text-node only with the full cached
-                # docproperty value. if for some reason the initial cached
-                # value is split into multiple text nodes we remove any
-                # additional node after updating the first node.
-                for unnecessary_w_t in text[1:]:
-                    first_w_r.remove(unnecessary_w_t)
-
-                # if there are multiple runs between "separate" and "end" they
-                # all may contain a piece of the cached docproperty value. we
-                # can't reliably handle this situation and only update the
-                # first node in the first run with the full cached value. it
-                # appears any additional runs with text nodes should then be
-                # removed to avoid duplicating parts of the cached docproperty
-                # value.
-                for w_r in runs[1:]:
-                    text = xpath(w_r, u'.//w:t')
-                    if text:
-                        w_p.remove(w_r)
+        """Update all instances of a given doc-property in the document."""
+        docprops = self.find_docprops_in_document(name)
+        for docprop in docprops:
+            docprop.update(value)
 
     def remove_field(self, name):
         """Remove the property field but keep it's value."""
@@ -291,3 +272,130 @@ class CustomProperties(object):
                 w_p, u'.//w:r/w:fldChar[@w:fldCharType="end"]/parent::w:r'))
             for w_r in w_rs:
                 w_p.remove(w_r)
+
+
+class FieldBase(object):
+
+    fieldname_search_expr = re.compile(
+            r'DOCPROPERTY +"{0,1}([^\\]*?)"{0,1} +\\\* MERGEFORMAT',
+            flags=re.UNICODE)
+
+    def __init__(self, field_node):
+        self.node = field_node
+        self.name = self._get_fieldname()
+
+    def _format_value(self, value):
+        if isinstance(value, bool):
+            return u'Y' if value else u'N'
+        elif isinstance(value, datetime):
+            return value.strftime('%x')
+        else:
+            return text_type(value)
+
+    def update(self, value):
+        raise NotImplementedError()
+
+    def _get_fieldname_string(self):
+        raise NotImplementedError()
+
+    def _get_fieldname(self):
+        match = self.fieldname_search_expr.search(self._get_fieldname_string())
+        if match is None:
+            return None
+        return match.groups()[0]
+
+
+class RunNode(object):
+
+    def __init__(self, node, is_begin=False, is_end=False,
+                 is_separate=False, is_after_separate=False):
+        self.node = node
+        self.is_begin = is_begin
+        self.is_end = is_end
+        self.is_separate = is_separate
+        self.is_after_separate = is_after_separate
+
+
+class SimpleField(FieldBase):
+
+    attr_name = "{{{}}}instr".format(NS["w"])
+
+    def _get_fieldname_string(self):
+        return self.node.attrib[self.attr_name]
+
+    def update(self, value):
+        text = xpath(self.node, './/w:t')
+        if text:
+            text[0].text = self._format_value(value)
+
+
+class ComplexField(FieldBase):
+
+    def __init__(self, field_node):
+        super(ComplexField, self).__init__(field_node)
+        # run and paragraph containing the field
+        self.w_r = self.node.getparent()
+        self.w_p = self.w_r.getparent()
+
+    def _get_fieldname_string(self):
+        return self.node.text
+
+    def _get_field_bound_indexes(self):
+        """Searches for the begin and end tags surrounding the complex
+        field as well as the corresponding position of the separate tag.
+        Returns their position in the parent node"""
+        fieldname_index = self.w_p.index(self.w_r)
+        begins = [self.w_p.index(el.getparent()) for el in xpath(self.w_p, u'.//w:r/w:fldChar[@w:fldCharType="begin"]')]
+        separates = [self.w_p.index(el.getparent()) for el in xpath(self.w_p, u'.//w:r/w:fldChar[@w:fldCharType="separate"]')]
+        ends = [self.w_p.index(el.getparent()) for el in xpath(self.w_p, u'.//w:r/w:fldChar[@w:fldCharType="end"]')]
+        for begin, separate, end in zip(begins, separates, ends):
+            if begin < fieldname_index < end:
+                return begin, separate, end
+        return None
+
+    def get_runs(self):
+        """Get run fields from the current complex field"""
+        runs = []
+        bounds = self._get_field_bound_indexes()
+        if bounds is None:
+            return runs
+        begin, separate, end = bounds
+
+        for run in xpath(self.w_p, u'.//w:r'):
+            position = self.w_p.index(run)
+            if begin <= position <= end:
+                runs.append(RunNode(run, position == begin, position == end,
+                                    position == separate, position > separate))
+        return runs
+
+    def update(self, value):
+        runs = self.get_runs()
+
+        # only keep run fields after <w:r><w:fldChar w:fldCharType="separate"/></w:r>
+        runs_after_separate = [run for run in runs
+                               if run.is_after_separate and not run.is_end]
+
+        if runs_after_separate:
+            first_w_r = runs_after_separate[0].node
+            text = xpath(first_w_r, u'.//w:t')
+            if text:
+                text[0].text = self._format_value(value)
+            # remove any additional text-nodes inside the first run. we
+            # update the first text-node only with the full cached
+            # docproperty value. if for some reason the initial cached
+            # value is split into multiple text nodes we remove any
+            # additional node after updating the first node.
+            for unnecessary_w_t in text[1:]:
+                first_w_r.remove(unnecessary_w_t)
+
+            # if there are multiple runs between "separate" and "end" they
+            # all may contain a piece of the cached docproperty value. we
+            # can't reliably handle this situation and only update the
+            # first node in the first run with the full cached value. it
+            # appears any additional runs with text nodes should then be
+            # removed to avoid duplicating parts of the cached docproperty
+            # value.
+            for run in runs_after_separate[1:]:
+                text = xpath(run.node, u'.//w:t')
+                if text:
+                    self.w_p.remove(run.node)

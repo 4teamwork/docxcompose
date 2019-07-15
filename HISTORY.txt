@@ -5,7 +5,7 @@ Changelog
 1.0.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Correctly treat two complex fields in the same paragraph. [njohner]
 
 
 1.0.0 (2019-06-13)
