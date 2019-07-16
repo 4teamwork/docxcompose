@@ -31,6 +31,18 @@ line, e.g.:
     $ docxcompose files/master.docx files/content.docx -o files/composed.docx
 
 
+Installation for development
+----------------------------
+
+To install docxcompose for development, clone the repository and using a python with setuptools (for example a fresh virtualenv), install it using pip:
+
+.. code:: sh
+
+    $ pip install -e .[tests]
+
+Tests can then be run with ``pytest``.
+
+
 A note about testing
 --------------------
 
