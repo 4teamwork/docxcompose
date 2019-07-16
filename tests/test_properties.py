@@ -70,6 +70,20 @@ def test_complex_docprop_with_multiple_textnode_in_same_run_are_updated():
     assert 'i will be spllchecked!' == cached_value[0].text
 
 
+def test_two_complex_docprop_in_same_paragraph():
+    document = Document(docx_path('two_props_in_same_paragraph.docx'))
+    assert 1 == len(document.paragraphs), 'input file should contains one paragraph'
+    paragraph = document.paragraphs[0]
+    assert 2 == len(xpath(paragraph._p, './/w:instrText')), \
+        'input should contain two complex field docproperties'
+
+    assert u'Foo Bar / 0' == paragraph.text
+
+    CustomProperties(document).update_all()
+
+    assert u'Bar / 2' == paragraph.text
+
+
 def test_get_doc_properties():
     document = Document(docx_path('docproperties.docx'))
     props = CustomProperties(document)
