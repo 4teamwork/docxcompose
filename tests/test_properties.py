@@ -84,6 +84,21 @@ def test_two_complex_docprop_in_same_paragraph():
     assert u'Bar / 2' == paragraph.text
 
 
+def test_multiple_identical_docprops_get_updated():
+    document = Document(docx_path('multiple_identical_properties.docx'))
+    assert 3 == len(document.paragraphs), 'input file should contain 3 paragraphs'
+    for paragraph in document.paragraphs:
+        assert 1 == len(xpath(paragraph._p, './/w:instrText')), \
+            'paragraph should contain one complex field docproperties'
+
+        assert u'Foo' == paragraph.text
+
+    CustomProperties(document).update_all()
+
+    for paragraph in document.paragraphs:
+        assert u'Bar' == paragraph.text
+
+
 def test_get_doc_properties():
     document = Document(docx_path('docproperties.docx'))
     props = CustomProperties(document)
