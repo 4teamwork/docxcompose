@@ -152,6 +152,101 @@ class TestUpdateSpecificDocproperty(object):
                 'docprop {} was not updated'.format(i+1)
 
 
+class TestRemoveField(object):
+
+    def test_removes_simple_field_but_keeps_value(self):
+        document = Document(docx_path('outdated_docproperty_with_umlauts.docx'))
+        assert 1 == len(document.paragraphs), 'input file should contain 1 paragraph'
+        fields = xpath(
+            document.element.body,
+            u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "F\xfc\xfc"\')]//w:t')
+        assert 1 == len(fields), 'should contain one simple field docproperty'
+
+        assert u'Hie chund ds property: ' == document.paragraphs[0].text
+        assert u'xxx' == fields[0].text
+
+        CustomProperties(document).remove_field(u"F\xfc\xfc")
+        fields = xpath(
+            document.element.body,
+            u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "F\xfc\xfc"\')]//w:t')
+        assert 0 == len(fields), 'should not contain any docproperties anymore'
+        # when simple field is removed, the value is moved one up in the hierarchy
+        assert u'Hie chund ds property: xxx' == document.paragraphs[0].text
+
+    def test_removes_complex_field_but_keeps_value(self):
+        # test fails because field has 2 spaces before docprop name
+        document = Document(docx_path('docproperties.docx'))
+        assert 6 == len(document.paragraphs), 'input file should contain 6 paragraphs'
+
+        properties = xpath(document.element.body, './/w:instrText')
+        assert 5 == len(properties),\
+            'input should contain five complex field docproperties'
+
+        expected_paragraphs = [u'Custom Doc Properties',
+                               u'Text: Foo Bar',
+                               u'Number: 123',
+                               u'Boolean: Y',
+                               u'Date: 11.06.2019',
+                               u'Float: 1.1']
+        actual_paragraphs = [paragraph.text for paragraph in document.paragraphs]
+        assert actual_paragraphs == expected_paragraphs
+
+        CustomProperties(document).remove_field("Number Property")
+
+        actual_paragraphs = [paragraph.text for paragraph in document.paragraphs]
+        assert actual_paragraphs == expected_paragraphs
+
+        properties = xpath(document.element.body, './/w:instrText')
+        assert 4 == len(properties),\
+            'only 4 fields should remain after removal of one'
+
+    def test_removes_all_instances_of_given_field(self):
+        document = Document(docx_path('multiple_identical_properties.docx'))
+        assert 3 == len(document.paragraphs), 'input file should contain 3 paragraphs'
+        assert 3 == len(xpath(document.element.body, './/w:instrText')), \
+            'document should contain three complex field docproperties'
+
+        for paragraph in document.paragraphs:
+            assert u'Foo' == paragraph.text
+
+        CustomProperties(document).remove_field("Text Property")
+
+        assert 3 == len(document.paragraphs)
+        assert 0 == len(xpath(document.element.body, './/w:instrText')), \
+            'document should not contain any complex field anymore'
+        for paragraph in document.paragraphs:
+            assert u'Foo' == paragraph.text, "value should have been kept in document"
+
+    def test_two_complex_docprop_in_same_paragraph(self):
+        document = Document(docx_path('two_props_in_same_paragraph.docx'))
+        assert 1 == len(document.paragraphs), 'input file should contains one paragraph'
+        paragraph = document.paragraphs[0]
+        assert 2 == len(xpath(paragraph._p, './/w:instrText')), \
+            'input should contain two complex field docproperties'
+
+        assert u'Foo Bar / 0' == paragraph.text
+
+        CustomProperties(document).update_all()
+
+        assert u'Bar / 2' == paragraph.text
+
+    def test_removing_field_when_two_complex_docprop_in_same_paragraph(self):
+        document = Document(docx_path('two_props_in_same_paragraph.docx'))
+        assert 1 == len(document.paragraphs), 'input file should contains one paragraph'
+        paragraph = document.paragraphs[0]
+        assert 2 == len(xpath(paragraph._p, './/w:instrText')), \
+            'input should contain two complex field docproperties'
+
+        assert u'Foo Bar / 0' == paragraph.text
+
+        CustomProperties(document).remove_field("Text Property")
+
+        assert 1 == len(document.paragraphs)
+        assert 1 == len(xpath(document.element.body, './/w:instrText')), \
+            'document should contain one complex field after removal'
+        assert u'Foo Bar / 0' == paragraph.text
+
+
 def test_get_doc_properties():
     document = Document(docx_path('docproperties.docx'))
     props = CustomProperties(document)
