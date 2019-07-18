@@ -239,39 +239,10 @@ class CustomProperties(object):
 
     def remove_field(self, name):
         """Remove the property field but keep it's value."""
+        docprops = self.find_docprops_in_document(name)
 
-        # Simple field
-        sfield = xpath(
-            self.doc.element.body,
-            u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "{}"\')]'.format(name))
-        if sfield:
-            sfield = sfield[0]
-            parent = sfield.getparent()
-            index = list(parent).index(sfield)
-            w_r = deepcopy(sfield[0])
-            parent.remove(sfield)
-            parent.insert(index, w_r)
-
-        # Complex field
-        cfield = xpath(
-            self.doc.element.body,
-            u'.//w:instrText[contains(.,\'DOCPROPERTY "{}"\')]'.format(name))
-        if cfield:
-            w_p = cfield[0].getparent().getparent()
-            # Create list of <w:r> nodes for removal
-            # Get all <w:r> nodes between <w:fldChar w:fldCharType="begin"/>
-            # and <w:fldChar w:fldCharType="separate"/> including boundaries.
-            w_rs = xpath(
-                w_p,
-                u'.//w:r[following-sibling::w:r/w:fldChar/@w:fldCharType="separate" '
-                u'and preceding-sibling::w:r/w:fldChar/@w:fldCharType="begin" '
-                u'or self::w:r/w:fldChar/@w:fldCharType="begin" '
-                u'or self::w:r/w:fldChar/@w:fldCharType="separate"]')
-            # Also include <w:r><w:fldChar w:fldCharType="separate"/></w:r>
-            w_rs.extend(xpath(
-                w_p, u'.//w:r/w:fldChar[@w:fldCharType="end"]/parent::w:r'))
-            for w_r in w_rs:
-                w_p.remove(w_r)
+        for docprop in docprops:
+            docprop.remove_field_keep_value()
 
 
 class FieldBase(object):
@@ -293,6 +264,9 @@ class FieldBase(object):
             return text_type(value)
 
     def update(self, value):
+        raise NotImplementedError()
+
+    def remove_field_keep_value(self):
         raise NotImplementedError()
 
     def _get_fieldname_string(self):
@@ -327,6 +301,13 @@ class SimpleField(FieldBase):
         text = xpath(self.node, './/w:t')
         if text:
             text[0].text = self._format_value(value)
+
+    def remove_field_keep_value(self):
+        parent = self.node.getparent()
+        index = list(parent).index(self.node)
+        w_r = deepcopy(self.node[0])
+        parent.remove(self.node)
+        parent.insert(index, w_r)
 
 
 class ComplexField(FieldBase):
@@ -399,3 +380,16 @@ class ComplexField(FieldBase):
                 text = xpath(run.node, u'.//w:t')
                 if text:
                     self.w_p.remove(run.node)
+
+    def remove_field_keep_value(self):
+        runs = self.get_runs()
+
+        # Create list of <w:r> nodes for removal
+        # Get all <w:r> nodes between <w:fldChar w:fldCharType="begin"/>
+        # and <w:fldChar w:fldCharType="separate"/> including boundaries,
+        # plus the <w:fldChar w:fldCharType="end"/> node
+        runs_to_remove = [run for run in runs
+                          if run.is_end or not run.is_after_separate]
+
+        for run in runs_to_remove:
+            self.w_p.remove(run.node)

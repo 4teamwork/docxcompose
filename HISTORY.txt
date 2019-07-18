@@ -6,7 +6,8 @@ Changelog
 ------------------
 
 - Correctly treat two complex fields in the same paragraph. [njohner]
-
+- Correctly handle the case when a docproperty appears multiple time in a document. [njohner]
+- Handle docproperties with extra space before or no quotes around the property name. [njohner]
 
 1.0.0 (2019-06-13)
 ------------------
