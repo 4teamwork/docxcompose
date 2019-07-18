@@ -93,8 +93,8 @@ class TestUpdateAllDocproperties(object):
 
         CustomProperties(document).update_all()
 
-        for paragraph in document.paragraphs:
-            assert u'Bar' == paragraph.text
+        for i, paragraph in enumerate(document.paragraphs):
+            assert u'Bar' == paragraph.text, 'docprop {} was not updated'.format(i+1)
 
 
 class TestUpdateSpecificDocproperty(object):
@@ -147,8 +147,9 @@ class TestUpdateSpecificDocproperty(object):
 
         CustomProperties(document).update("Text Property", "New value")
 
-        for paragraph in document.paragraphs:
-            assert u'New value' == paragraph.text
+        for i, paragraph in enumerate(document.paragraphs):
+            assert u'New value' == paragraph.text,\
+                'docprop {} was not updated'.format(i+1)
 
 
 def test_get_doc_properties():
