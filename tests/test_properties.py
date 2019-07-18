@@ -9,94 +9,92 @@ from utils import docx_path
 XPATH_CACHED_DOCPROPERTY_VALUES = 'w:r[preceding-sibling::w:r/w:fldChar/@w:fldCharType="separate"]/w:t'
 
 
-def test_updates_doc_properties_with_umlauts():
-    document = Document(docx_path('outdated_docproperty_with_umlauts.docx'))
+class TestUpdateAllDocproperties(object):
 
-    text = xpath(
-        document.element.body,
-        u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "F\xfc\xfc"\')]//w:t')
-    assert u'xxx' == text[0].text
+    def test_updates_doc_properties_with_umlauts(self):
+        document = Document(docx_path('outdated_docproperty_with_umlauts.docx'))
 
-    CustomProperties(document).update_all()
+        text = xpath(
+            document.element.body,
+            u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "F\xfc\xfc"\')]//w:t')
+        assert u'xxx' == text[0].text
 
-    text = xpath(
-        document.element.body,
-        u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "F\xfc\xfc"\')]//w:t')
-    assert u'j\xe4ja.' == text[0].text
+        CustomProperties(document).update_all()
 
+        text = xpath(
+            document.element.body,
+            u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "F\xfc\xfc"\')]//w:t')
+        assert u'j\xe4ja.' == text[0].text
 
-def test_complex_docprop_fields_with_multiple_textnodes_are_updated():
-    document = Document(docx_path('spellchecked_docproperty.docx'))
-    paragraphs = xpath(document.element.body, '//w:p')
-    assert 1 == len(paragraphs), 'input file contains one paragraph'
-    assert 1 == len(xpath(document.element.body, '//w:instrText')), \
-        'input contains one complex field docproperty'
-    w_p = paragraphs[0]
-    cached_value = xpath(w_p, XPATH_CACHED_DOCPROPERTY_VALUES)
-    assert 4 == len(cached_value), \
-        'doc property value is scattered over 4 parts'
-    assert 'i will be spllchecked!' == ''.join(
-        each.text for each in cached_value)
+    def test_complex_docprop_fields_with_multiple_textnodes_are_updated(self):
+        document = Document(docx_path('spellchecked_docproperty.docx'))
+        paragraphs = xpath(document.element.body, '//w:p')
+        assert 1 == len(paragraphs), 'input file contains one paragraph'
+        assert 1 == len(xpath(document.element.body, '//w:instrText')), \
+            'input contains one complex field docproperty'
+        w_p = paragraphs[0]
+        cached_value = xpath(w_p, XPATH_CACHED_DOCPROPERTY_VALUES)
+        assert 4 == len(cached_value), \
+            'doc property value is scattered over 4 parts'
+        assert 'i will be spllchecked!' == ''.join(
+            each.text for each in cached_value)
 
-    CustomProperties(document).update_all()
+        CustomProperties(document).update_all()
 
-    w_p = xpath(document.element.body, '//w:p')[0]
-    cached_value = xpath(w_p, XPATH_CACHED_DOCPROPERTY_VALUES)
-    assert 1 == len(cached_value), \
-        'doc property value has been reset to one cached value'
-    assert 'i will be spllchecked!' == cached_value[0].text
+        w_p = xpath(document.element.body, '//w:p')[0]
+        cached_value = xpath(w_p, XPATH_CACHED_DOCPROPERTY_VALUES)
+        assert 1 == len(cached_value), \
+            'doc property value has been reset to one cached value'
+        assert 'i will be spllchecked!' == cached_value[0].text
 
+    def test_complex_docprop_with_multiple_textnode_in_same_run_are_updated(self):
+        document = Document(docx_path('two_textnodes_in_run_docproperty.docx'))
+        paragraphs = xpath(document.element.body, '//w:p')
+        assert 1 == len(paragraphs), 'input file contains one paragraph'
+        assert 1 == len(xpath(document.element.body, '//w:instrText')), \
+            'input contains one complex field docproperty'
 
-def test_complex_docprop_with_multiple_textnode_in_same_run_are_updated():
-    document = Document(docx_path('two_textnodes_in_run_docproperty.docx'))
-    paragraphs = xpath(document.element.body, '//w:p')
-    assert 1 == len(paragraphs), 'input file contains one paragraph'
-    assert 1 == len(xpath(document.element.body, '//w:instrText')), \
-        'input contains one complex field docproperty'
+        w_p = paragraphs[0]
+        cached_value = xpath(w_p, XPATH_CACHED_DOCPROPERTY_VALUES)
+        assert 2 == len(cached_value), \
+            'doc property value is scattered over 2 parts'
+        assert 'Hello there' == ''.join(
+            each.text for each in cached_value)
 
-    w_p = paragraphs[0]
-    cached_value = xpath(w_p, XPATH_CACHED_DOCPROPERTY_VALUES)
-    assert 2 == len(cached_value), \
-        'doc property value is scattered over 2 parts'
-    assert 'Hello there' == ''.join(
-        each.text for each in cached_value)
+        CustomProperties(document).update_all()
 
-    CustomProperties(document).update_all()
+        w_p = xpath(document.element.body, '//w:p')[0]
+        cached_value = xpath(w_p, XPATH_CACHED_DOCPROPERTY_VALUES)
+        assert 1 == len(cached_value), \
+            'doc property value has been reset to one cached value'
+        assert 'i will be spllchecked!' == cached_value[0].text
 
-    w_p = xpath(document.element.body, '//w:p')[0]
-    cached_value = xpath(w_p, XPATH_CACHED_DOCPROPERTY_VALUES)
-    assert 1 == len(cached_value), \
-        'doc property value has been reset to one cached value'
-    assert 'i will be spllchecked!' == cached_value[0].text
+    def test_two_complex_docprop_in_same_paragraph(self):
+        document = Document(docx_path('two_props_in_same_paragraph.docx'))
+        assert 1 == len(document.paragraphs), 'input file should contains one paragraph'
+        paragraph = document.paragraphs[0]
+        assert 2 == len(xpath(paragraph._p, './/w:instrText')), \
+            'input should contain two complex field docproperties'
 
+        assert u'Foo Bar / 0' == paragraph.text
 
-def test_two_complex_docprop_in_same_paragraph():
-    document = Document(docx_path('two_props_in_same_paragraph.docx'))
-    assert 1 == len(document.paragraphs), 'input file should contains one paragraph'
-    paragraph = document.paragraphs[0]
-    assert 2 == len(xpath(paragraph._p, './/w:instrText')), \
-        'input should contain two complex field docproperties'
+        CustomProperties(document).update_all()
 
-    assert u'Foo Bar / 0' == paragraph.text
+        assert u'Bar / 2' == paragraph.text
 
-    CustomProperties(document).update_all()
+    def test_multiple_identical_docprops_get_updated(self):
+        document = Document(docx_path('multiple_identical_properties.docx'))
+        assert 3 == len(document.paragraphs), 'input file should contain 3 paragraphs'
+        for paragraph in document.paragraphs:
+            assert 1 == len(xpath(paragraph._p, './/w:instrText')), \
+                'paragraph should contain one complex field docproperties'
 
-    assert u'Bar / 2' == paragraph.text
+            assert u'Foo' == paragraph.text
 
+        CustomProperties(document).update_all()
 
-def test_multiple_identical_docprops_get_updated():
-    document = Document(docx_path('multiple_identical_properties.docx'))
-    assert 3 == len(document.paragraphs), 'input file should contain 3 paragraphs'
-    for paragraph in document.paragraphs:
-        assert 1 == len(xpath(paragraph._p, './/w:instrText')), \
-            'paragraph should contain one complex field docproperties'
-
-        assert u'Foo' == paragraph.text
-
-    CustomProperties(document).update_all()
-
-    for paragraph in document.paragraphs:
-        assert u'Bar' == paragraph.text
+        for paragraph in document.paragraphs:
+            assert u'Bar' == paragraph.text
 
 
 def test_get_doc_properties():
