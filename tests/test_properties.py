@@ -97,6 +97,60 @@ class TestUpdateAllDocproperties(object):
             assert u'Bar' == paragraph.text
 
 
+class TestUpdateSpecificDocproperty(object):
+
+    def test_simple_field_gets_updated(self):
+        document = Document(docx_path('outdated_docproperty_with_umlauts.docx'))
+        text = xpath(
+            document.element.body,
+            u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "F\xfc\xfc"\')]//w:t')
+        assert u'xxx' == text[0].text
+
+        CustomProperties(document).update(u"F\xfc\xfc", u"new v\xe4lue")
+
+        text = xpath(
+            document.element.body,
+            u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "F\xfc\xfc"\')]//w:t')
+        assert u"new v\xe4lue" == text[0].text
+
+    def test_complex_field_gets_updated(self):
+        document = Document(docx_path('docproperties.docx'))
+        assert 6 == len(document.paragraphs), 'input file should contain 6 paragraphs'
+
+        properties = xpath(document.element.body, './/w:instrText')
+        assert 5 == len(properties),\
+            'input should contain five complex field docproperties'
+
+        expected_paragraphs = [u'Custom Doc Properties',
+                               u'Text: Foo Bar',
+                               u'Number: 123',
+                               u'Boolean: Y',
+                               u'Date: 11.06.2019',
+                               u'Float: 1.1']
+        actual_paragraphs = [paragraph.text for paragraph in document.paragraphs]
+        assert actual_paragraphs == expected_paragraphs
+
+        CustomProperties(document).update("Number Property", 423)
+
+        expected_paragraphs[2] = u'Number: 423'
+        actual_paragraphs = [paragraph.text for paragraph in document.paragraphs]
+        assert actual_paragraphs == expected_paragraphs
+
+    def test_multiple_identical_docprops_get_updated(self):
+        document = Document(docx_path('multiple_identical_properties.docx'))
+        assert 3 == len(document.paragraphs), 'input file should contain 3 paragraphs'
+        for paragraph in document.paragraphs:
+            assert 1 == len(xpath(paragraph._p, './/w:instrText')), \
+                'paragraph should contain one complex field docproperties'
+
+            assert u'Foo' == paragraph.text
+
+        CustomProperties(document).update("Text Property", "New value")
+
+        for paragraph in document.paragraphs:
+            assert u'New value' == paragraph.text
+
+
 def test_get_doc_properties():
     document = Document(docx_path('docproperties.docx'))
     props = CustomProperties(document)
