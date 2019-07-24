@@ -242,18 +242,19 @@ class CustomProperties(object):
         docprops = self.find_docprops_in_document(name)
 
         for docprop in docprops:
-            docprop.remove_field_keep_value()
+            docprop.replace_field_with_value()
 
 
 class FieldBase(object):
-
+    """Class used to represent a docproperty field in the document.xml.
+    """
     fieldname_search_expr = re.compile(
             r'DOCPROPERTY +"{0,1}([^\\]*?)"{0,1} +\\\* MERGEFORMAT',
             flags=re.UNICODE)
 
     def __init__(self, field_node):
         self.node = field_node
-        self.name = self._get_fieldname()
+        self.name = self._parse_fieldname()
 
     def _format_value(self, value):
         if isinstance(value, bool):
@@ -264,33 +265,31 @@ class FieldBase(object):
             return text_type(value)
 
     def update(self, value):
+        """ Sets the value of the docproperty in the document
+        """
         raise NotImplementedError()
 
-    def remove_field_keep_value(self):
+    def replace_field_with_value(self):
+        """ Removes the field from the document, replacing it with
+        its value.
+        """
         raise NotImplementedError()
 
     def _get_fieldname_string(self):
         raise NotImplementedError()
 
-    def _get_fieldname(self):
+    def _parse_fieldname(self):
         match = self.fieldname_search_expr.search(self._get_fieldname_string())
         if match is None:
             return None
         return match.groups()[0]
 
 
-class RunNode(object):
-
-    def __init__(self, node, is_begin=False, is_end=False,
-                 is_separate=False, is_after_separate=False):
-        self.node = node
-        self.is_begin = is_begin
-        self.is_end = is_end
-        self.is_separate = is_separate
-        self.is_after_separate = is_after_separate
-
-
 class SimpleField(FieldBase):
+    """ Represents a simple field, i.e. <w:fldSimple> node in the
+    document.xml, its body containing the value of the field.
+    self.node here is the <w:fldSimple> node.
+    """
 
     attr_name = "{{{}}}instr".format(NS["w"])
 
@@ -302,7 +301,7 @@ class SimpleField(FieldBase):
         if text:
             text[0].text = self._format_value(value)
 
-    def remove_field_keep_value(self):
+    def replace_field_with_value(self):
         parent = self.node.getparent()
         index = list(parent).index(self.node)
         w_r = deepcopy(self.node[0])
@@ -311,6 +310,15 @@ class SimpleField(FieldBase):
 
 
 class ComplexField(FieldBase):
+    """ Represents a complex field, i.e. a several <w:r> nodes delimited by runs
+    containing <w:fldChar w:fldCharType="begin"/> and <w:fldChar w:fldCharType="end"/>.
+    In these fields, the actual value is stored in <w:r> nodes that come after a
+    <w:r><w:fldChar w:fldCharType="separate"/></w:r> node.
+    """
+
+    XPATH_PRECEDING_BEGINS = "./preceding-sibling::w:r/w:fldChar[@w:fldCharType=\"begin\"]/.."
+    XPATH_FOLLOWING_ENDS = "./following-sibling::w:r/w:fldChar[@w:fldCharType=\"end\"]/.."
+    XPATH_FOLLOWING_SEPARATES = "./following-sibling::w:r/w:fldChar[@w:fldCharType=\"separate\"]/.."
 
     def __init__(self, field_node):
         super(ComplexField, self).__init__(field_node)
@@ -321,43 +329,60 @@ class ComplexField(FieldBase):
     def _get_fieldname_string(self):
         return self.node.text
 
-    def _get_field_bound_indexes(self):
-        """Searches for the begin and end tags surrounding the complex
-        field as well as the corresponding position of the separate tag.
-        Returns their position in the parent node"""
-        fieldname_index = self.w_p.index(self.w_r)
-        begins = [self.w_p.index(el.getparent()) for el in xpath(self.w_p, u'.//w:r/w:fldChar[@w:fldCharType="begin"]')]
-        separates = [self.w_p.index(el.getparent()) for el in xpath(self.w_p, u'.//w:r/w:fldChar[@w:fldCharType="separate"]')]
-        ends = [self.w_p.index(el.getparent()) for el in xpath(self.w_p, u'.//w:r/w:fldChar[@w:fldCharType="end"]')]
-        for begin, separate, end in zip(begins, separates, ends):
-            if begin < fieldname_index < end:
-                return begin, separate, end
-        return None
+    @property
+    def begin_run(self):
+        return xpath(self.w_r, self.XPATH_PRECEDING_BEGINS)[-1]
 
-    def get_runs(self):
-        """Get run fields from the current complex field"""
-        runs = []
-        bounds = self._get_field_bound_indexes()
-        if bounds is None:
-            return runs
-        begin, separate, end = bounds
+    @property
+    def end_run(self):
+        if not hasattr(self, "_end_run"):
+            self._end_run = xpath(self.w_r, self.XPATH_FOLLOWING_ENDS)[0]
+        return self._end_run
 
-        for run in xpath(self.w_p, u'.//w:r'):
-            position = self.w_p.index(run)
-            if begin <= position <= end:
-                runs.append(RunNode(run, position == begin, position == end,
-                                    position == separate, position > separate))
+    @property
+    def separate_run(self):
+        separate = xpath(self.w_r, self.XPATH_FOLLOWING_SEPARATES)[0]
+
+        # The ooxml format standard says that the separate node is optional, but
+        # we do not have an implementation that supports a missing separate node.
+        # so we assert that the separte node we found is in our complex field
+        if not self.w_p.index(separate) < self.w_p.index(self.end_run):
+            msg = "Complex field without separate node is not supported"
+            raise NotImplementedError(msg)
+        return separate
+
+    @property
+    def _runs(self):
+        return xpath(self.begin_run, "./following-sibling::w:r")
+
+    def get_runs_for_update(self):
+        """
+        Get run fields after <w:r><w:fldChar w:fldCharType="separate"/></w:r>
+        """
+        end_index = self.w_p.index(self.end_run)
+        separate_index = self.w_p.index(self.separate_run)
+        return [run for run in self._runs
+                if self.w_p.index(run) > separate_index and
+                self.w_p.index(run) < end_index]
+
+    def get_runs_to_replace_field_with_value(self):
+        """
+        Get all <w:r> nodes between <w:fldChar w:fldCharType="begin"/>
+        and <w:fldChar w:fldCharType="separate"/> including boundaries,
+        plus the <w:fldChar w:fldCharType="end"/> node
+        """
+        separate_index = self.w_p.index(self.separate_run)
+        runs = [run for run in self._runs
+                if self.w_p.index(run) <= separate_index]
+        runs.insert(0, self.begin_run)
+        runs.append(self.end_run)
         return runs
 
     def update(self, value):
-        runs = self.get_runs()
-
-        # only keep run fields after <w:r><w:fldChar w:fldCharType="separate"/></w:r>
-        runs_after_separate = [run for run in runs
-                               if run.is_after_separate and not run.is_end]
+        runs_after_separate = self.get_runs_for_update()
 
         if runs_after_separate:
-            first_w_r = runs_after_separate[0].node
+            first_w_r = runs_after_separate[0]
             text = xpath(first_w_r, u'.//w:t')
             if text:
                 text[0].text = self._format_value(value)
@@ -377,19 +402,12 @@ class ComplexField(FieldBase):
             # removed to avoid duplicating parts of the cached docproperty
             # value.
             for run in runs_after_separate[1:]:
-                text = xpath(run.node, u'.//w:t')
+                text = xpath(run, u'.//w:t')
                 if text:
-                    self.w_p.remove(run.node)
+                    self.w_p.remove(run)
 
-    def remove_field_keep_value(self):
-        runs = self.get_runs()
-
-        # Create list of <w:r> nodes for removal
-        # Get all <w:r> nodes between <w:fldChar w:fldCharType="begin"/>
-        # and <w:fldChar w:fldCharType="separate"/> including boundaries,
-        # plus the <w:fldChar w:fldCharType="end"/> node
-        runs_to_remove = [run for run in runs
-                          if run.is_end or not run.is_after_separate]
-
+    def replace_field_with_value(self):
+        # Get list of <w:r> nodes for removal
+        runs_to_remove = self.get_runs_to_replace_field_with_value()
         for run in runs_to_remove:
-            self.w_p.remove(run.node)
+            self.w_p.remove(run)

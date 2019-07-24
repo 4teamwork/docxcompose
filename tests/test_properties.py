@@ -1,12 +1,108 @@
 from datetime import datetime
 from docx import Document
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
+from docxcompose.properties import ComplexField
 from docxcompose.properties import CustomProperties
+from docxcompose.properties import SimpleField
 from docxcompose.utils import xpath
 from utils import docx_path
 
 
 XPATH_CACHED_DOCPROPERTY_VALUES = 'w:r[preceding-sibling::w:r/w:fldChar/@w:fldCharType="separate"]/w:t'
+
+
+class TestIdentifyDocpropertiesInDocument(object):
+
+    def test_identifies_simple_fields_correctly(self):
+        document = Document(docx_path('outdated_docproperty_with_umlauts.docx'))
+        properties = CustomProperties(document).find_docprops_in_document()
+
+        assert 1 == len(properties), \
+            'input should contain 1 simple field docproperty'
+
+        prop = properties[0]
+        assert u'F\xfc\xfc' == prop.name
+        assert isinstance(prop, SimpleField)
+
+    def test_identifies_complex_fields_correctly(self):
+        document = Document(docx_path('three_props_in_same_paragraph.docx'))
+        properties = CustomProperties(document).find_docprops_in_document()
+
+        assert 1 == len(document.paragraphs), 'input file should contains one paragraph'
+        assert 3 == len(properties), \
+            'input should contain three complex field docproperties'
+
+        # check that all fields were identified as complex fields
+        for prop in properties:
+            assert isinstance(prop, ComplexField)
+
+        # check that all field names were parsed correctly
+        expected_names = ('Text Property', 'Number Property', 'Text Property')
+        for name, prop in zip(expected_names, properties):
+            assert name == prop.name
+
+        # check that begin, separate and end were identified correctly
+        attrib_key = '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}fldCharType'
+        expected_indexes = ((1, 3, 11), (13, 15, 17), (25, 27, 32))
+        for prop, indexes in zip(properties, expected_indexes):
+            assert prop.begin_run.getchildren()[1].attrib[attrib_key] == "begin"
+            assert prop.separate_run.getchildren()[1].attrib[attrib_key] == "separate"
+            assert prop.end_run.getchildren()[1].attrib[attrib_key] == "end"
+            assert prop.w_p.index(prop.begin_run) == indexes[0]
+            assert prop.w_p.index(prop.separate_run) == indexes[1]
+            assert prop.w_p.index(prop.end_run) == indexes[2]
+
+    def test_finds_run_nodes_in_complex_fields_correctly(self):
+        document = Document(docx_path('three_props_in_same_paragraph.docx'))
+        properties = CustomProperties(document).find_docprops_in_document()
+
+        assert 3 == len(properties), \
+            'input should contain three complex field docproperties'
+
+        # In the first field, there are the following runs: begin, docprop,
+        # a separate, 3 runs for the value (because of spellcheck) and end
+        prop = properties[0]
+        assert 3 == len(prop.get_runs_for_update())
+
+        # when dissolving a property the runs that have to be removed
+        # are the begin, docprop, and from separate to end (here just
+        # separate and end)
+        runs = prop.get_runs_to_replace_field_with_value()
+        assert 4 == len(runs)
+        assert runs[0] == prop.begin_run
+        assert runs[1] == prop.w_r
+        assert runs[2] == prop.separate_run
+        assert runs[-1] == prop.end_run
+
+        # In the second field, there are the following runs: begin, docprop,
+        # a separate, 1 run for the value and end
+        prop = properties[1]
+        assert 1 == len(prop.get_runs_for_update())
+
+        # when dissolving a property the runs that have to be removed
+        # are from begin to separate (here begin, docprop, separate)
+        # and the end
+        runs = prop.get_runs_to_replace_field_with_value()
+        assert 4 == len(runs)
+        assert runs[0] == prop.begin_run
+        assert runs[1] == prop.w_r
+        assert runs[2] == prop.separate_run
+        assert runs[-1] == prop.end_run
+
+        # In the first field, there are the following runs: begin, docprop,
+        # a separate, 2 runs for the value (because of spellcheck) and end
+        prop = properties[2]
+        assert 2 == len(prop.get_runs_for_update())
+
+        # when dissolving a property the runs that have to be removed
+        # are the begin, docprop, and from separate to end (here just
+        # separate and end)
+        runs = prop.get_runs_to_replace_field_with_value()
+        assert 4 == len(runs)
+        assert runs[0] == prop.begin_run
+        assert runs[1] == prop.w_r
+        assert runs[2] == prop.separate_run
+        assert runs[-1] == prop.end_run
 
 
 class TestUpdateAllDocproperties(object):
