@@ -248,7 +248,7 @@ class TestUpdateSpecificDocproperty(object):
                 'docprop {} was not updated'.format(i+1)
 
 
-class TestRemoveField(object):
+class TestDissolveField(object):
 
     def test_removes_simple_field_but_keeps_value(self):
         document = Document(docx_path('outdated_docproperty_with_umlauts.docx'))
@@ -261,7 +261,7 @@ class TestRemoveField(object):
         assert u'Hie chund ds property: ' == document.paragraphs[0].text
         assert u'xxx' == fields[0].text
 
-        CustomProperties(document).remove_field(u"F\xfc\xfc")
+        CustomProperties(document).dissolve_fields(u"F\xfc\xfc")
         fields = xpath(
             document.element.body,
             u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "F\xfc\xfc"\')]//w:t')
@@ -287,7 +287,7 @@ class TestRemoveField(object):
         actual_paragraphs = [paragraph.text for paragraph in document.paragraphs]
         assert actual_paragraphs == expected_paragraphs
 
-        CustomProperties(document).remove_field("Number Property")
+        CustomProperties(document).dissolve_fields("Number Property")
 
         actual_paragraphs = [paragraph.text for paragraph in document.paragraphs]
         assert actual_paragraphs == expected_paragraphs
@@ -296,7 +296,7 @@ class TestRemoveField(object):
         assert 4 == len(properties),\
             'only 4 fields should remain after removal of one'
 
-    def test_removes_all_instances_of_given_field(self):
+    def test_dissolves_all_instances_of_given_field(self):
         document = Document(docx_path('multiple_identical_properties.docx'))
         assert 3 == len(document.paragraphs), 'input file should contain 3 paragraphs'
         assert 3 == len(xpath(document.element.body, './/w:instrText')), \
@@ -305,7 +305,7 @@ class TestRemoveField(object):
         for paragraph in document.paragraphs:
             assert u'Foo' == paragraph.text
 
-        CustomProperties(document).remove_field("Text Property")
+        CustomProperties(document).dissolve_fields("Text Property")
 
         assert 3 == len(document.paragraphs)
         assert 0 == len(xpath(document.element.body, './/w:instrText')), \
@@ -326,7 +326,7 @@ class TestRemoveField(object):
 
         assert u'Bar / 2' == paragraph.text
 
-    def test_removing_field_when_two_complex_docprop_in_same_paragraph(self):
+    def test_dissolving_field_when_two_complex_docprop_in_same_paragraph(self):
         document = Document(docx_path('two_props_in_same_paragraph.docx'))
         assert 1 == len(document.paragraphs), 'input file should contains one paragraph'
         paragraph = document.paragraphs[0]
@@ -335,7 +335,7 @@ class TestRemoveField(object):
 
         assert u'Foo Bar / 0' == paragraph.text
 
-        CustomProperties(document).remove_field("Text Property")
+        CustomProperties(document).dissolve_fields("Text Property")
 
         assert 1 == len(document.paragraphs)
         assert 1 == len(xpath(document.element.body, './/w:instrText')), \

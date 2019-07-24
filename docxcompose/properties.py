@@ -237,8 +237,8 @@ class CustomProperties(object):
         for docprop in docprops:
             docprop.update(value)
 
-    def remove_field(self, name):
-        """Remove the property field but keep it's value."""
+    def dissolve_fields(self, name):
+        """Remove the property fields but keep their value."""
         docprops = self.find_docprops_in_document(name)
 
         for docprop in docprops:
