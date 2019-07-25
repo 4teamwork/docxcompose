@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.0.1 (unreleased)
+1.0.1 (2019-07-25)
 ------------------
 
 - Correctly treat two complex fields in the same paragraph. [njohner]
