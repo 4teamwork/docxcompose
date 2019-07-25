@@ -58,7 +58,7 @@ class Composer(object):
         if remove_property_fields:
             cprops = CustomProperties(doc)
             for name in cprops.keys():
-                cprops.remove_field(name)
+                cprops.dissolve_fields(name)
 
         self._create_style_id_mapping(doc)
 
