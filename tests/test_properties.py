@@ -316,19 +316,6 @@ class TestDissolveField(object):
         for paragraph in document.paragraphs:
             assert u'Foo' == paragraph.text, "value should have been kept in document"
 
-    def test_two_complex_docprop_in_same_paragraph(self):
-        document = Document(docx_path('two_props_in_same_paragraph.docx'))
-        assert 1 == len(document.paragraphs), 'input file should contains one paragraph'
-        paragraph = document.paragraphs[0]
-        assert 2 == len(xpath(paragraph._p, './/w:instrText')), \
-            'input should contain two complex field docproperties'
-
-        assert u'Foo Bar / 0' == paragraph.text
-
-        CustomProperties(document).update_all()
-
-        assert u'Bar / 2' == paragraph.text
-
     def test_dissolving_field_when_three_complex_docprop_in_same_paragraph(self):
         document = Document(docx_path('three_props_in_same_paragraph.docx'))
         assert 1 == len(document.paragraphs), 'input file should contains one paragraph'
