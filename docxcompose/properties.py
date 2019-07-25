@@ -309,6 +309,11 @@ class SimpleField(FieldBase):
         parent.insert(index, w_r)
 
 
+class InvalidComplexField(Exception):
+    """This exception is raised when a complex field cannot
+    be handled correctly."""
+
+
 class ComplexField(FieldBase):
     """ Represents a complex field, i.e. a several <w:r> nodes delimited by runs
     containing <w:fldChar w:fldCharType="begin"/> and <w:fldChar w:fldCharType="end"/>.
@@ -348,7 +353,7 @@ class ComplexField(FieldBase):
         # so we assert that the separte node we found is in our complex field
         if not self.w_p.index(separate) < self.w_p.index(self.end_run):
             msg = "Complex field without separate node is not supported"
-            raise NotImplementedError(msg)
+            raise InvalidComplexField(msg)
         return separate
 
     @property
