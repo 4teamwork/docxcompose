@@ -165,18 +165,21 @@ class TestUpdateAllDocproperties(object):
             'doc property value has been reset to one cached value'
         assert 'i will be spllchecked!' == cached_value[0].text
 
-    def test_two_complex_docprop_in_same_paragraph(self):
-        document = Document(docx_path('two_props_in_same_paragraph.docx'))
+    def test_three_complex_docprop_in_same_paragraph(self):
+        document = Document(docx_path('three_props_in_same_paragraph.docx'))
+        properties = CustomProperties(document)
+
         assert 1 == len(document.paragraphs), 'input file should contains one paragraph'
         paragraph = document.paragraphs[0]
-        assert 2 == len(xpath(paragraph._p, './/w:instrText')), \
-            'input should contain two complex field docproperties'
+        assert 3 == len(properties.find_docprops_in_document()), \
+            'input should contain three complex field docproperties'
 
-        assert u'Foo Bar / 0' == paragraph.text
+        text = u'{text} / {num} mor between the fields {text} and some afte the three fields'
+        assert text.format(text="I was spellcecked", num=0) == paragraph.text
 
-        CustomProperties(document).update_all()
+        properties.update_all()
 
-        assert u'Bar / 2' == paragraph.text
+        assert text.format(text="Foo", num=2) == paragraph.text
 
     def test_multiple_identical_docprops_get_updated(self):
         document = Document(docx_path('multiple_identical_properties.docx'))
@@ -326,21 +329,23 @@ class TestDissolveField(object):
 
         assert u'Bar / 2' == paragraph.text
 
-    def test_dissolving_field_when_two_complex_docprop_in_same_paragraph(self):
-        document = Document(docx_path('two_props_in_same_paragraph.docx'))
+    def test_dissolving_field_when_three_complex_docprop_in_same_paragraph(self):
+        document = Document(docx_path('three_props_in_same_paragraph.docx'))
         assert 1 == len(document.paragraphs), 'input file should contains one paragraph'
         paragraph = document.paragraphs[0]
-        assert 2 == len(xpath(paragraph._p, './/w:instrText')), \
-            'input should contain two complex field docproperties'
+        properties = CustomProperties(document)
+        assert 3 == len(properties.find_docprops_in_document()), \
+            'input should contain three complex field docproperties'
 
-        assert u'Foo Bar / 0' == paragraph.text
+        text = u'{text} / {num} mor between the fields {text} and some afte the three fields'
+        assert text.format(text="I was spellcecked", num=0) == paragraph.text
 
-        CustomProperties(document).dissolve_fields("Text Property")
+        properties.dissolve_fields("Text Property")
 
         assert 1 == len(document.paragraphs)
-        assert 1 == len(xpath(document.element.body, './/w:instrText')), \
+        assert 1 == len(properties.find_docprops_in_document()), \
             'document should contain one complex field after removal'
-        assert u'Foo Bar / 0' == paragraph.text
+        assert text.format(text="I was spellcecked", num=0) == paragraph.text
 
 
 def test_get_doc_properties():
