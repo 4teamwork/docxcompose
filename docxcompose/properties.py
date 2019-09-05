@@ -336,24 +336,34 @@ class ComplexField(FieldBase):
 
     @property
     def begin_run(self):
-        return xpath(self.w_r, self.XPATH_PRECEDING_BEGINS)[-1]
+        begins = xpath(self.w_r, self.XPATH_PRECEDING_BEGINS)
+        if not begins:
+            msg = "Complex field without begin node is not supported"
+            raise InvalidComplexField(msg)
+        return begins[-1]
 
     @property
     def end_run(self):
         if not hasattr(self, "_end_run"):
-            self._end_run = xpath(self.w_r, self.XPATH_FOLLOWING_ENDS)[0]
+            ends = xpath(self.w_r, self.XPATH_FOLLOWING_ENDS)
+            if not ends:
+                msg = "Complex field without end node is not supported"
+                raise InvalidComplexField(msg)
+            self._end_run = ends[0]
         return self._end_run
 
-    @property
-    def separate_run(self):
-        separate = xpath(self.w_r, self.XPATH_FOLLOWING_SEPARATES)[0]
+    def get_separate_run(self):
+        """The ooxml format standard says that the separate node is optional,
+        so we check whether we find one in our complex field, otherwise
+        we return None."""
+        separates = xpath(self.w_r, self.XPATH_FOLLOWING_SEPARATES)
+        if not separates:
+            return None
 
-        # The ooxml format standard says that the separate node is optional, but
-        # we do not have an implementation that supports a missing separate node.
-        # so we assert that the separte node we found is in our complex field
+        separate = separates[0]
         if not self.w_p.index(separate) < self.w_p.index(self.end_run):
-            msg = "Complex field without separate node is not supported"
-            raise InvalidComplexField(msg)
+            return None
+
         return separate
 
     @property
@@ -365,7 +375,13 @@ class ComplexField(FieldBase):
         Get run fields after <w:r><w:fldChar w:fldCharType="separate"/></w:r>
         """
         end_index = self.w_p.index(self.end_run)
-        separate_index = self.w_p.index(self.separate_run)
+        separate_run = self.get_separate_run()
+
+        # if there is no separate, we have no value to update
+        if separate_run is None:
+            return []
+
+        separate_index = self.w_p.index(separate_run)
         return [run for run in self._runs
                 if self.w_p.index(run) > separate_index and
                 self.w_p.index(run) < end_index]
@@ -376,9 +392,18 @@ class ComplexField(FieldBase):
         and <w:fldChar w:fldCharType="separate"/> including boundaries,
         plus the <w:fldChar w:fldCharType="end"/> node
         """
-        separate_index = self.w_p.index(self.separate_run)
-        runs = [run for run in self._runs
-                if self.w_p.index(run) <= separate_index]
+        separate_run = self.get_separate_run()
+
+        # If there is no separate, then the field has no value
+        # meaning we can remove the whole field.
+        if separate_run is None:
+            end_index = self.w_p.index(self.end_run)
+            runs = [run for run in self._runs
+                    if self.w_p.index(run) < end_index]
+        else:
+            separate_index = self.w_p.index(separate_run)
+            runs = [run for run in self._runs
+                    if self.w_p.index(run) <= separate_index]
         runs.insert(0, self.begin_run)
         runs.append(self.end_run)
         return runs
