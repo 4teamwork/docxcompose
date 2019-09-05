@@ -104,6 +104,32 @@ class TestIdentifyDocpropertiesInDocument(object):
         assert runs[2] == prop.get_separate_run()
         assert runs[-1] == prop.end_run
 
+    def test_finds_run_nodes_in_complex_field_without_separate_correctly(self):
+        document = Document(docx_path('complex_field_without_separate.docx'))
+        properties = CustomProperties(document).find_docprops_in_document()
+
+        assert 2 == len(properties), \
+            'input should contain two complex field docproperties'
+
+        # The "User.FullName" docproperty should be the one without a separate run
+        # In this field, there are the following runs: begin, docprop and end
+        matches = [prop for prop in properties if prop.name == 'User.FullName']
+        assert 1 == len(matches), \
+            "There should be only one User.FullName docproperty"
+        prop = matches[0]
+        assert prop.get_separate_run() is None, \
+            "This complex field should not have a separate run."
+        assert [] == prop.get_runs_for_update(), \
+            "As there is no separate run, there should be no run to update"
+
+        # As there are no separate, all runs should be removed when dissolving
+        # the property.
+        runs = prop.get_runs_to_replace_field_with_value()
+        assert 3 == len(runs)
+        assert runs[0] == prop.begin_run
+        assert runs[1] == prop.w_r
+        assert runs[2] == prop.end_run
+
 
 class TestUpdateAllDocproperties(object):
 
@@ -194,6 +220,48 @@ class TestUpdateAllDocproperties(object):
 
         for i, paragraph in enumerate(document.paragraphs):
             assert u'Bar' == paragraph.text, 'docprop {} was not updated'.format(i+1)
+
+    def test_docproperty_without_separate_does_not_get_updated(self):
+        """It would probably be better to add the value to such a field
+        during update, but that seems out of scope for now.
+        """
+        document = Document(docx_path('complex_field_without_separate.docx'))
+        custom_properties = CustomProperties(document)
+        properties = custom_properties.find_docprops_in_document()
+        paragraphs = document.paragraphs
+
+        # Make sure that a value is set for 'User.FullName'
+        assert ('User.FullName', 'Test User') in custom_properties.items()
+        assert ('Dossier.Title', ' Some Title') in custom_properties.items()
+
+        # Make sure that 'User.FullName' field has no separate node
+        matches = [prop for prop in properties if prop.name == 'User.FullName']
+        assert 1 == len(matches), \
+            "There should be only one User.FullName docproperty"
+        fullname = matches[0]
+        assert fullname.get_separate_run() is None, \
+            "This complex field should not have a separate run."
+
+        # Make sure that 'Dossier.Title' field has a separate node
+        matches = [prop for prop in properties if prop.name == 'Dossier.Title']
+        assert 1 == len(matches), \
+            "There should be only one Dossier.Title docproperty"
+        title = matches[0]
+        assert title.get_separate_run() is not None, \
+            "This complex field should have a separate run."
+
+        # Check the content of the paragraphs before update
+        assert 2 == len(paragraphs)
+        assert u'Sachbearbeiter: ' == paragraphs[0].text
+        assert u'Sachbearbeiter: ' in fullname.w_p.xml
+        assert u'Dossier Titel:  ' == paragraphs[1].text
+
+        custom_properties.update_all()
+
+        # Field with missing separate was not updated
+        assert u'Sachbearbeiter: ' == paragraphs[0].text
+        # Next field was updated correctly
+        assert u'Dossier Titel:  Some Title' == paragraphs[1].text
 
 
 class TestUpdateSpecificDocproperty(object):
