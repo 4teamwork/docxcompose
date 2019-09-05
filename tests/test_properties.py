@@ -46,10 +46,10 @@ class TestIdentifyDocpropertiesInDocument(object):
         expected_indexes = ((1, 3, 11), (13, 15, 17), (25, 27, 32))
         for prop, indexes in zip(properties, expected_indexes):
             assert prop.begin_run.getchildren()[1].attrib[attrib_key] == "begin"
-            assert prop.separate_run.getchildren()[1].attrib[attrib_key] == "separate"
+            assert prop.get_separate_run().getchildren()[1].attrib[attrib_key] == "separate"
             assert prop.end_run.getchildren()[1].attrib[attrib_key] == "end"
             assert prop.w_p.index(prop.begin_run) == indexes[0]
-            assert prop.w_p.index(prop.separate_run) == indexes[1]
+            assert prop.w_p.index(prop.get_separate_run()) == indexes[1]
             assert prop.w_p.index(prop.end_run) == indexes[2]
 
     def test_finds_run_nodes_in_complex_fields_correctly(self):
@@ -71,7 +71,7 @@ class TestIdentifyDocpropertiesInDocument(object):
         assert 4 == len(runs)
         assert runs[0] == prop.begin_run
         assert runs[1] == prop.w_r
-        assert runs[2] == prop.separate_run
+        assert runs[2] == prop.get_separate_run()
         assert runs[-1] == prop.end_run
 
         # In the second field, there are the following runs: begin, docprop,
@@ -86,7 +86,7 @@ class TestIdentifyDocpropertiesInDocument(object):
         assert 4 == len(runs)
         assert runs[0] == prop.begin_run
         assert runs[1] == prop.w_r
-        assert runs[2] == prop.separate_run
+        assert runs[2] == prop.get_separate_run()
         assert runs[-1] == prop.end_run
 
         # In the first field, there are the following runs: begin, docprop,
@@ -101,7 +101,7 @@ class TestIdentifyDocpropertiesInDocument(object):
         assert 4 == len(runs)
         assert runs[0] == prop.begin_run
         assert runs[1] == prop.w_r
-        assert runs[2] == prop.separate_run
+        assert runs[2] == prop.get_separate_run()
         assert runs[-1] == prop.end_run
 
 

@@ -336,24 +336,39 @@ class ComplexField(FieldBase):
 
     @property
     def begin_run(self):
-        return xpath(self.w_r, self.XPATH_PRECEDING_BEGINS)[-1]
+        begins = xpath(self.w_r, self.XPATH_PRECEDING_BEGINS)
+        if not begins:
+            msg = "Complex field without begin node is not supported"
+            raise InvalidComplexField(msg)
+        return begins[-1]
 
     @property
     def end_run(self):
         if not hasattr(self, "_end_run"):
-            self._end_run = xpath(self.w_r, self.XPATH_FOLLOWING_ENDS)[0]
+            ends = xpath(self.w_r, self.XPATH_FOLLOWING_ENDS)
+            if not ends:
+                msg = "Complex field without end node is not supported"
+                raise InvalidComplexField(msg)
+            self._end_run = ends[0]
         return self._end_run
 
     @property
     def separate_run(self):
-        separate = xpath(self.w_r, self.XPATH_FOLLOWING_SEPARATES)[0]
+        separates = xpath(self.w_r, self.XPATH_FOLLOWING_SEPARATES)
 
         # The ooxml format standard says that the separate node is optional, but
         # we do not have an implementation that supports a missing separate node.
-        # so we assert that the separte node we found is in our complex field
+        # so we assert that the we did find a separate node and that it
+        # is in our complex field
+        if not separates:
+            msg = "Complex field without separate node is not supported"
+            raise InvalidComplexField(msg)
+        separate = separates[0]
+
         if not self.w_p.index(separate) < self.w_p.index(self.end_run):
             msg = "Complex field without separate node is not supported"
             raise InvalidComplexField(msg)
+
         return separate
 
     @property
