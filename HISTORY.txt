@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.0.2 (unreleased)
+1.0.2 (2019-09-09)
 ------------------
 
 - Do not fail when complex field does not have a separate node. [njohner]
