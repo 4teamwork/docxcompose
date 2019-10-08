@@ -23,7 +23,7 @@ The docxcompose console script
 ------------------------------
 
 
-The ``docxcompose`` console script allows to compose docx files form the command
+The ``docxcompose`` console script allows to compose docx files from the command
 line, e.g.:
 
 .. code:: sh
