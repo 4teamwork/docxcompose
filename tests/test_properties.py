@@ -5,10 +5,10 @@ from docxcompose.properties import ComplexField
 from docxcompose.properties import CustomProperties
 from docxcompose.properties import SimpleField
 from docxcompose.utils import xpath
-from utils import assert_simple_field_value
 from utils import assert_complex_field_value
+from utils import assert_simple_field_value
+from utils import cached_complex_field_values
 from utils import docx_path
-from utils import XPATH_CACHED_DOCPROPERTY_VALUES
 
 
 class TestIdentifyDocpropertiesInDocument(object):
@@ -444,19 +444,19 @@ class TestUpdateAllDocproperties(object):
         assert 1 == len(xpath(document.element.body, '//w:instrText')), \
             'input contains one complex field docproperty'
         w_p = paragraphs[0]
-        cached_value = xpath(w_p, XPATH_CACHED_DOCPROPERTY_VALUES)
-        assert 4 == len(cached_value), \
+
+        cached_values = cached_complex_field_values(w_p)
+        assert 4 == len(cached_values), \
             'doc property value is scattered over 4 parts'
-        assert 'i will be spllchecked!' == ''.join(
-            each.text for each in cached_value)
+        assert 'i will be spllchecked!' == ''.join(cached_values)
 
         CustomProperties(document).update_all()
 
         w_p = xpath(document.element.body, '//w:p')[0]
-        cached_value = xpath(w_p, XPATH_CACHED_DOCPROPERTY_VALUES)
-        assert 1 == len(cached_value), \
+        cached_values = cached_complex_field_values(w_p)
+        assert 1 == len(cached_values), \
             'doc property value has been reset to one cached value'
-        assert 'i will be spllchecked!' == cached_value[0].text
+        assert 'i will be spllchecked!' == cached_values[0]
 
     def test_complex_docprop_with_multiple_textnode_in_same_run_are_updated(self):
         document = Document(docx_path('two_textnodes_in_run_docproperty.docx'))
@@ -466,19 +466,18 @@ class TestUpdateAllDocproperties(object):
             'input contains one complex field docproperty'
 
         w_p = paragraphs[0]
-        cached_value = xpath(w_p, XPATH_CACHED_DOCPROPERTY_VALUES)
-        assert 2 == len(cached_value), \
+        cached_values = cached_complex_field_values(w_p)
+        assert 2 == len(cached_values), \
             'doc property value is scattered over 2 parts'
-        assert 'Hello there' == ''.join(
-            each.text for each in cached_value)
+        assert 'Hello there' == ''.join(cached_values)
 
         CustomProperties(document).update_all()
 
         w_p = xpath(document.element.body, '//w:p')[0]
-        cached_value = xpath(w_p, XPATH_CACHED_DOCPROPERTY_VALUES)
-        assert 1 == len(cached_value), \
+        cached_values = cached_complex_field_values(w_p)
+        assert 1 == len(cached_values), \
             'doc property value has been reset to one cached value'
-        assert 'i will be spllchecked!' == cached_value[0].text
+        assert 'i will be spllchecked!' == cached_values[0]
 
     def test_three_complex_docprop_in_same_paragraph(self):
         document = Document(docx_path('three_props_in_same_paragraph.docx'))

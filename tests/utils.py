@@ -20,6 +20,11 @@ def complex_field_expression(name):
     return u'.//w:instrText[contains(.,\'DOCPROPERTY "{}"\')]'.format(name)
 
 
+def cached_complex_field_values(element):
+    value_elements = xpath(element, XPATH_CACHED_DOCPROPERTY_VALUES)
+    return [each.text for each in value_elements]
+
+
 def assert_simple_field_value(expected, element, name):
     prop_elements = xpath(element, simple_field_expression(name))
     assert len(prop_elements) == 1, u'Could not find simple field "{}"'.format(name)
@@ -31,8 +36,7 @@ def assert_complex_field_value(expected, element, name):
     prop_elements = xpath(element, complex_field_expression(name))
     assert len(prop_elements) == 1, u'Could not find complex field "{}"'.format(name)
     parent_paragraph = prop_elements[0].getparent().getparent()
-    value_elements = xpath(parent_paragraph, XPATH_CACHED_DOCPROPERTY_VALUES)
-    actual = u''.join(each.text for each in value_elements)
+    actual = u''.join(cached_complex_field_values(parent_paragraph))
     assert expected == actual, u'{} == {}'.format(expected, actual)
 
 
