@@ -2,10 +2,38 @@ from docx import Document
 from docxcompose.composer import Composer
 from operator import attrgetter
 import os.path
+from docxcompose.utils import xpath
+
+
+XPATH_CACHED_DOCPROPERTY_VALUES = 'w:r[preceding-sibling::w:r/w:fldChar/@w:fldCharType="separate"]/w:t'
 
 
 def docx_path(filename):
     return os.path.join(os.path.dirname(__file__), 'docs', filename)
+
+
+def simple_field_expression(name):
+    return u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "{}"\')]//w:t'.format(name)
+
+
+def complex_field_expression(name):
+    return u'.//w:instrText[contains(.,\'DOCPROPERTY "{}"\')]'.format(name)
+
+
+def assert_simple_field_value(expected, element, name):
+    prop_elements = xpath(element, simple_field_expression(name))
+    assert len(prop_elements) == 1, u'Could not find simple field "{}"'.format(name)
+    actual = prop_elements[0].text
+    assert expected == actual, u'{} == {}'.format(expected, actual)
+
+
+def assert_complex_field_value(expected, element, name):
+    prop_elements = xpath(element, complex_field_expression(name))
+    assert len(prop_elements) == 1, u'Could not find complex field "{}"'.format(name)
+    parent_paragraph = prop_elements[0].getparent().getparent()
+    value_elements = xpath(parent_paragraph, XPATH_CACHED_DOCPROPERTY_VALUES)
+    actual = u''.join(each.text for each in value_elements)
+    assert expected == actual, u'{} == {}'.format(expected, actual)
 
 
 class ComparableDocument(object):
