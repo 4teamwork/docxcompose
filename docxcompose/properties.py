@@ -200,18 +200,47 @@ class CustomProperties(object):
             self.set(name, value)
 
     def find_docprops_in_document(self, name=None):
-        """This method searches for all doc-properties in the document
+        """This method searches for all doc-properties in the document and
+        in section headers and footers.
         """
+        docprops = []
+        for section in self.doc.sections:
+            all_header_footers = [section.first_page_header,
+                                  section.header,
+                                  section.even_page_header,
+                                  section.first_page_footer,
+                                  section.footer,
+                                  section.even_page_footer,
+                                  ]
+            # word seems to keep "hidden" header and footer definitions, so
+            # even though some may have been deactivated via the
+            # "different first page" or "different odd & even pages" checkboxes
+            # the definitions will be accessible and also reactivated when the
+            # checkboxes are re-enabled.
+            # we deliberately bypass the `different_first_page_header_footer`
+            # accessor method and check via the underlying `_has_definition`
+            # method if the header/footer has a definition in xml.
+            for container in all_header_footers:
+                if container._has_definition and not container.is_linked_to_previous:
+                    docprops.extend(self._find_docprops_in(
+                        container.part.element, name=name))
+
+        docprops.extend(self._find_docprops_in(
+            self.doc.element.body, name=name))
+
+        return docprops
+
+    def _find_docprops_in(self, element, name=None):
         # First we search for the simple fields:
         sfield_nodes = xpath(
-            self.doc.element.body,
+            element,
             u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY \')]')
 
         docprops = [SimpleField(sfield_node) for sfield_node in sfield_nodes]
 
         # Now for the complex fields
         cfield_nodes = xpath(
-            self.doc.element.body,
+            element,
             u'.//w:instrText[contains(.,\'DOCPROPERTY \')]')
 
         docprops.extend([ComplexField(cfield_node) for cfield_node in cfield_nodes])
