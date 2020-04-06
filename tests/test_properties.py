@@ -8,6 +8,7 @@ from docxcompose.utils import xpath
 from utils import assert_complex_field_value
 from utils import assert_simple_field_value
 from utils import cached_complex_field_values
+from utils import simple_field_expression
 from utils import docx_path
 
 
@@ -425,17 +426,13 @@ class TestUpdateAllDocproperties(object):
     def test_updates_doc_properties_with_umlauts(self):
         document = Document(docx_path('outdated_docproperty_with_umlauts.docx'))
 
-        text = xpath(
-            document.element.body,
-            u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "F\xfc\xfc"\')]//w:t')
-        assert u'xxx' == text[0].text
+        assert_simple_field_value(
+            u'xxx', document.element.body, u"F\xfc\xfc")
 
         CustomProperties(document).update_all()
 
-        text = xpath(
-            document.element.body,
-            u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "F\xfc\xfc"\')]//w:t')
-        assert u'j\xe4ja.' == text[0].text
+        assert_simple_field_value(
+            u'j\xe4ja.', document.element.body, u"F\xfc\xfc")
 
     def test_complex_docprop_fields_with_multiple_textnodes_are_updated(self):
         document = Document(docx_path('spellchecked_docproperty.docx'))
@@ -556,17 +553,13 @@ class TestUpdateSpecificDocproperty(object):
 
     def test_simple_field_gets_updated(self):
         document = Document(docx_path('outdated_docproperty_with_umlauts.docx'))
-        text = xpath(
-            document.element.body,
-            u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "F\xfc\xfc"\')]//w:t')
-        assert u'xxx' == text[0].text
+        assert_simple_field_value(
+            u'xxx', document.element.body, u"F\xfc\xfc")
 
         CustomProperties(document).update(u"F\xfc\xfc", u"new v\xe4lue")
 
-        text = xpath(
-            document.element.body,
-            u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "F\xfc\xfc"\')]//w:t')
-        assert u"new v\xe4lue" == text[0].text
+        assert_simple_field_value(
+            u"new v\xe4lue", document.element.body, u"F\xfc\xfc")
 
     def test_complex_field_gets_updated(self):
         document = Document(docx_path('docproperties.docx'))
@@ -614,7 +607,7 @@ class TestDissolveField(object):
         assert 1 == len(document.paragraphs), 'input file should contain 1 paragraph'
         fields = xpath(
             document.element.body,
-            u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "F\xfc\xfc"\')]//w:t')
+            simple_field_expression(u"F\xfc\xfc"))
         assert 1 == len(fields), 'should contain one simple field docproperty'
 
         assert u'Hie chund ds property: ' == document.paragraphs[0].text
@@ -623,7 +616,7 @@ class TestDissolveField(object):
         CustomProperties(document).dissolve_fields(u"F\xfc\xfc")
         fields = xpath(
             document.element.body,
-            u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "F\xfc\xfc"\')]//w:t')
+            simple_field_expression(u"F\xfc\xfc"))
         assert 0 == len(fields), 'should not contain any docproperties anymore'
         # when simple field is removed, the value is moved one up in the hierarchy
         assert u'Hie chund ds property: xxx' == document.paragraphs[0].text
