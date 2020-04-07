@@ -5,10 +5,11 @@ from docxcompose.properties import ComplexField
 from docxcompose.properties import CustomProperties
 from docxcompose.properties import SimpleField
 from docxcompose.utils import xpath
+from utils import assert_complex_field_value
+from utils import assert_simple_field_value
+from utils import cached_complex_field_values
+from utils import simple_field_expression
 from utils import docx_path
-
-
-XPATH_CACHED_DOCPROPERTY_VALUES = 'w:r[preceding-sibling::w:r/w:fldChar/@w:fldCharType="separate"]/w:t'
 
 
 class TestIdentifyDocpropertiesInDocument(object):
@@ -130,23 +131,308 @@ class TestIdentifyDocpropertiesInDocument(object):
         assert runs[1] == prop.w_r
         assert runs[2] == prop.end_run
 
+    def test_finds_header_footer_of_different_sections(self):
+        document = Document(docx_path('docproperties_header_footer_3_sections.docx'))
+        properties = CustomProperties(document).find_docprops_in_document()
+
+        assert 5 == len(properties), \
+            'input should contain 5 properties in header/footer and body'
+
+        expected_properties = [
+                'Text Property',
+                'Number Property',
+                'Date Property',
+                'Float Property',
+                'Boolean Property']
+
+        assert expected_properties == [each.name for each in properties]
+
 
 class TestUpdateAllDocproperties(object):
+
+    def test_updates_doc_properties_in_header(self):
+        document = Document(docx_path('docproperties_header.docx'))
+
+        assert_simple_field_value(
+            u'xxx',
+            document.sections[0].header.part.element,
+            u'my.text-prop')
+
+        CustomProperties(document).update_all()
+
+        assert_simple_field_value(
+            u"i'm some text",
+            document.sections[0].header.part.element,
+            u'my.text-prop')
+
+    def test_updates_doc_properties_in_footer(self):
+        document = Document(docx_path('docproperties_footer.docx'))
+
+        assert_simple_field_value(
+            u'xxx',
+            document.sections[0].footer.part.element,
+            u'my.text-prop')
+
+        CustomProperties(document).update_all()
+
+        assert_simple_field_value(
+            u'b\xe4hh',
+            document.sections[0].footer.part.element,
+            u'my.text-prop')
+
+    def test_updates_doc_properties_different_first_page(self):
+        document = Document(docx_path('docproperties_different_first_page_1_section.docx'))
+
+        assert_simple_field_value(
+            u'xxx',
+            document.sections[0].first_page_header.part.element,
+            u'page1.header')
+        assert_simple_field_value(
+            u'xxx',
+            document.sections[0].first_page_footer.part.element,
+            u'page1.footer')
+        assert_simple_field_value(
+            u'0',
+            document.sections[0].header.part.element,
+            u'page2.header')
+        assert_simple_field_value(
+            u'01.01.1970',
+            document.sections[0].footer.part.element,
+            u'page2.footer')
+
+        CustomProperties(document).update_all()
+
+        assert_simple_field_value(
+            u'p1h',
+            document.sections[0].first_page_header.part.element,
+            u'page1.header')
+        assert_simple_field_value(
+            u'p1f',
+            document.sections[0].first_page_footer.part.element,
+            u'page1.footer')
+        assert_simple_field_value(
+            u'42',
+            document.sections[0].header.part.element,
+            u'page2.header')
+        assert_simple_field_value(
+            u'18.10.1984',
+            document.sections[0].footer.part.element,
+            u'page2.footer')
+
+    def test_updates_doc_properties_different_odd_even_pages(self):
+        document = Document(docx_path('docproperties_different_odd_even_pages_1_section.docx'))
+
+        assert_simple_field_value(
+            u'xxx',
+            document.sections[0].header.part.element,
+            u'odd.header')
+        assert_simple_field_value(
+            u'xxx',
+            document.sections[0].footer.part.element,
+            u'odd.footer')
+        assert_simple_field_value(
+            u'0',
+            document.sections[0].even_page_header.part.element,
+            u'even.header')
+        assert_simple_field_value(
+            u'Y',
+            document.sections[0].even_page_footer.part.element,
+            u'even.footer')
+
+        CustomProperties(document).update_all()
+
+        assert_simple_field_value(
+            u'odd-header',
+            document.sections[0].header.part.element,
+            u'odd.header')
+        assert_simple_field_value(
+            u'odd-footer',
+            document.sections[0].footer.part.element,
+            u'odd.footer')
+        assert_simple_field_value(
+            u'1337',
+            document.sections[0].even_page_header.part.element,
+            u'even.header')
+        assert_simple_field_value(
+            u'N',
+            document.sections[0].even_page_footer.part.element,
+            u'even.footer')
+
+    def test_updates_docproperties_shared_footer(self):
+        document = Document(docx_path('docproperties_shared_footer_2_sections.docx'))
+
+        header_1 = document.sections[0].header
+        header_2 = document.sections[1].header
+        assert not header_1.is_linked_to_previous
+        assert not header_2.is_linked_to_previous
+        assert_complex_field_value(
+            u'xxx',
+            header_1.part.element,
+            u'section1.header')
+        assert_complex_field_value(
+            u'yyy',
+            header_2.part.element,
+            u'section2.header')
+
+        # the same footer should be referenced by both sections
+        # the sections should be considered as linked
+        footer_1 = document.sections[0].footer
+        footer_2 = document.sections[1].footer
+        assert not footer_1.is_linked_to_previous
+        assert footer_2.is_linked_to_previous
+        assert_complex_field_value(
+            u'99',
+            footer_1.part.element,
+            u'shared.footer')
+        assert_complex_field_value(
+            u'99',
+            footer_2.part.element,
+            u'shared.footer')
+
+        CustomProperties(document).update_all()
+
+        assert_complex_field_value(
+            u'h\xe4der 1',
+            header_1.part.element,
+            u'section1.header')
+        assert_complex_field_value(
+            u'h\xf6der 2',
+            header_2.part.element,
+            u'section2.header')
+
+        # the same footer should be referenced by both sections
+        footer_1 = document.sections[0].footer
+        footer_2 = document.sections[1].footer
+        assert_complex_field_value(
+            u'123123123',
+            footer_1.part.element,
+            u'shared.footer')
+        assert_complex_field_value(
+            u'123123123',
+            footer_2.part.element,
+            u'shared.footer')
+
+    def test_updates_docproperties_shared_header(self):
+        document = Document(docx_path('docproperties_shared_header_2_sections.docx'))
+
+        # the same header should be referenced by both sections
+        # the sections should be considered as linked
+        header_1 = document.sections[0].header
+        header_2 = document.sections[1].header
+        assert not header_1.is_linked_to_previous
+        assert header_2.is_linked_to_previous
+        assert_complex_field_value(
+            u'xxx',
+            header_1.part.element,
+            u'shared.header')
+        assert_complex_field_value(
+            u'xxx',
+            header_2.part.element,
+            u'shared.header')
+
+        footer_1 = document.sections[0].footer
+        footer_2 = document.sections[1].footer
+        assert not footer_1.is_linked_to_previous
+        assert not footer_2.is_linked_to_previous
+        assert_complex_field_value(
+            u'123',
+            footer_1.part.element,
+            u'section1.footer')
+        assert_complex_field_value(
+            u'yyy',
+            footer_2.part.element,
+            u'section2.footer')
+
+        CustomProperties(document).update_all()
+
+        # the same header should be referenced by both sections
+        assert_complex_field_value(
+            u'sh\xe4red',
+            header_1.part.element,
+            u'shared.header')
+        assert_complex_field_value(
+            u'sh\xe4red',
+            header_2.part.element,
+            u'shared.header')
+
+        footer_1 = document.sections[0].footer
+        footer_2 = document.sections[1].footer
+        assert_complex_field_value(
+            u'-1.0',
+            footer_1.part.element,
+            u'section1.footer')
+        assert_complex_field_value(
+            u'f\xfc\xfcter',
+            footer_2.part.element,
+            u'section2.footer')
+
+    def test_updates_docproperties_shared_header_footer(self):
+        document = Document(docx_path('docproperties_shared_header_footer_2_sections.docx'))
+
+        # the same header should be referenced by both sections
+        # the sections should be considered as linked
+        header_1 = document.sections[0].header
+        header_2 = document.sections[1].header
+        assert not header_1.is_linked_to_previous
+        assert header_2.is_linked_to_previous
+        assert_complex_field_value(
+            u'blub',
+            header_1.part.element,
+            u'shared.header')
+        assert_complex_field_value(
+            u'blub',
+            header_2.part.element,
+            u'shared.header')
+
+        # the same footer should be referenced by both sections
+        # the sections should be considered as linked
+        footer_1 = document.sections[0].footer
+        footer_2 = document.sections[1].footer
+        assert not footer_1.is_linked_to_previous
+        assert footer_2.is_linked_to_previous
+        assert_complex_field_value(
+            u'N',
+            footer_1.part.element,
+            u'shared.footer')
+        assert_complex_field_value(
+            u'N',
+            footer_2.part.element,
+            u'shared.footer')
+
+        CustomProperties(document).update_all()
+
+        # the same header should be referenced by both sections
+        assert_complex_field_value(
+            u'ig bi obe',
+            header_1.part.element,
+            u'shared.header')
+        assert_complex_field_value(
+            u'ig bi obe',
+            header_2.part.element,
+            u'shared.header')
+
+        # the same footer should be referenced by both sections
+        footer_1 = document.sections[0].footer
+        footer_2 = document.sections[1].footer
+        assert_complex_field_value(
+            u'Y',
+            footer_1.part.element,
+            u'shared.footer')
+        assert_complex_field_value(
+            u'Y',
+            footer_2.part.element,
+            u'shared.footer')
 
     def test_updates_doc_properties_with_umlauts(self):
         document = Document(docx_path('outdated_docproperty_with_umlauts.docx'))
 
-        text = xpath(
-            document.element.body,
-            u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "F\xfc\xfc"\')]//w:t')
-        assert u'xxx' == text[0].text
+        assert_simple_field_value(
+            u'xxx', document.element.body, u"F\xfc\xfc")
 
         CustomProperties(document).update_all()
 
-        text = xpath(
-            document.element.body,
-            u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "F\xfc\xfc"\')]//w:t')
-        assert u'j\xe4ja.' == text[0].text
+        assert_simple_field_value(
+            u'j\xe4ja.', document.element.body, u"F\xfc\xfc")
 
     def test_complex_docprop_fields_with_multiple_textnodes_are_updated(self):
         document = Document(docx_path('spellchecked_docproperty.docx'))
@@ -155,19 +441,19 @@ class TestUpdateAllDocproperties(object):
         assert 1 == len(xpath(document.element.body, '//w:instrText')), \
             'input contains one complex field docproperty'
         w_p = paragraphs[0]
-        cached_value = xpath(w_p, XPATH_CACHED_DOCPROPERTY_VALUES)
-        assert 4 == len(cached_value), \
+
+        cached_values = cached_complex_field_values(w_p)
+        assert 4 == len(cached_values), \
             'doc property value is scattered over 4 parts'
-        assert 'i will be spllchecked!' == ''.join(
-            each.text for each in cached_value)
+        assert 'i will be spllchecked!' == ''.join(cached_values)
 
         CustomProperties(document).update_all()
 
         w_p = xpath(document.element.body, '//w:p')[0]
-        cached_value = xpath(w_p, XPATH_CACHED_DOCPROPERTY_VALUES)
-        assert 1 == len(cached_value), \
+        cached_values = cached_complex_field_values(w_p)
+        assert 1 == len(cached_values), \
             'doc property value has been reset to one cached value'
-        assert 'i will be spllchecked!' == cached_value[0].text
+        assert 'i will be spllchecked!' == cached_values[0]
 
     def test_complex_docprop_with_multiple_textnode_in_same_run_are_updated(self):
         document = Document(docx_path('two_textnodes_in_run_docproperty.docx'))
@@ -177,19 +463,18 @@ class TestUpdateAllDocproperties(object):
             'input contains one complex field docproperty'
 
         w_p = paragraphs[0]
-        cached_value = xpath(w_p, XPATH_CACHED_DOCPROPERTY_VALUES)
-        assert 2 == len(cached_value), \
+        cached_values = cached_complex_field_values(w_p)
+        assert 2 == len(cached_values), \
             'doc property value is scattered over 2 parts'
-        assert 'Hello there' == ''.join(
-            each.text for each in cached_value)
+        assert 'Hello there' == ''.join(cached_values)
 
         CustomProperties(document).update_all()
 
         w_p = xpath(document.element.body, '//w:p')[0]
-        cached_value = xpath(w_p, XPATH_CACHED_DOCPROPERTY_VALUES)
-        assert 1 == len(cached_value), \
+        cached_values = cached_complex_field_values(w_p)
+        assert 1 == len(cached_values), \
             'doc property value has been reset to one cached value'
-        assert 'i will be spllchecked!' == cached_value[0].text
+        assert 'i will be spllchecked!' == cached_values[0]
 
     def test_three_complex_docprop_in_same_paragraph(self):
         document = Document(docx_path('three_props_in_same_paragraph.docx'))
@@ -268,17 +553,13 @@ class TestUpdateSpecificDocproperty(object):
 
     def test_simple_field_gets_updated(self):
         document = Document(docx_path('outdated_docproperty_with_umlauts.docx'))
-        text = xpath(
-            document.element.body,
-            u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "F\xfc\xfc"\')]//w:t')
-        assert u'xxx' == text[0].text
+        assert_simple_field_value(
+            u'xxx', document.element.body, u"F\xfc\xfc")
 
         CustomProperties(document).update(u"F\xfc\xfc", u"new v\xe4lue")
 
-        text = xpath(
-            document.element.body,
-            u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "F\xfc\xfc"\')]//w:t')
-        assert u"new v\xe4lue" == text[0].text
+        assert_simple_field_value(
+            u"new v\xe4lue", document.element.body, u"F\xfc\xfc")
 
     def test_complex_field_gets_updated(self):
         document = Document(docx_path('docproperties.docx'))
@@ -326,7 +607,7 @@ class TestDissolveField(object):
         assert 1 == len(document.paragraphs), 'input file should contain 1 paragraph'
         fields = xpath(
             document.element.body,
-            u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "F\xfc\xfc"\')]//w:t')
+            simple_field_expression(u"F\xfc\xfc"))
         assert 1 == len(fields), 'should contain one simple field docproperty'
 
         assert u'Hie chund ds property: ' == document.paragraphs[0].text
@@ -335,7 +616,7 @@ class TestDissolveField(object):
         CustomProperties(document).dissolve_fields(u"F\xfc\xfc")
         fields = xpath(
             document.element.body,
-            u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "F\xfc\xfc"\')]//w:t')
+            simple_field_expression(u"F\xfc\xfc"))
         assert 0 == len(fields), 'should not contain any docproperties anymore'
         # when simple field is removed, the value is moved one up in the hierarchy
         assert u'Hie chund ds property: xxx' == document.paragraphs[0].text

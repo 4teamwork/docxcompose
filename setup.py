@@ -11,7 +11,7 @@ tests_require = [
 
 setup(
     name='docxcompose',
-    version='1.0.3.dev0',
+    version='1.1.0.dev0',
     description="Compose .docx documents",
     long_description=(open("README.rst").read() + "\n" +
                       open("HISTORY.txt").read()),
@@ -33,7 +33,7 @@ setup(
     zip_safe=True,
     install_requires=[
         'lxml',
-        'python-docx',
+        'python-docx >= 0.8.8',
         'setuptools',
         'six',
     ],

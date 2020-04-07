@@ -2,10 +2,10 @@ Changelog
 =========
 
 
-1.0.3 (unreleased)
+1.1.0 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Add support for updating docproperties in header and footer of documents. [deiferni]
 
 
 1.0.2 (2019-09-09)
