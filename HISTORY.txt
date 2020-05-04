@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.1.1 (unreleased)
+1.1.1 (2020-05-04)
 ------------------
 
 - Fix an issue with non-ascii binary_type docproperties. [deiferni]
