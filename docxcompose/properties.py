@@ -10,7 +10,7 @@ from docx.oxml.coreprops import CT_CoreProperties
 from docxcompose.utils import NS
 from docxcompose.utils import xpath
 from lxml.etree import QName
-from six import string_types
+from six import binary_type
 from six import text_type
 import pkg_resources
 import re
@@ -40,7 +40,11 @@ def value2vt(value):
     elif isinstance(value, datetime):
         el = parse_xml(CUSTOM_PROPERTY_TYPES['datetime'])
         el.text = value.strftime('%Y-%m-%dT%H:%M:%SZ')
-    elif isinstance(value, string_types):
+    elif isinstance(value, text_type):
+        el = parse_xml(CUSTOM_PROPERTY_TYPES['text'])
+        el.text = value
+    elif isinstance(value, binary_type):
+        value = value.decode('utf-8')
         el = parse_xml(CUSTOM_PROPERTY_TYPES['text'])
         el.text = value
     else:

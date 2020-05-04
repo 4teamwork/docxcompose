@@ -716,6 +716,14 @@ def test_add_doc_properties():
     assert props.get('My Date Property') == datetime(2019, 10, 23, 15, 44, 50)
 
 
+def test_add_utf8_property():
+    document = Document(docx_path('docproperties.docx'))
+    props = CustomProperties(document)
+
+    props.add('My Text Property', u'f\xfc\xfc'.encode('utf-8'))
+    assert props.get('My Text Property') == u'f\xfc\xfc'
+
+
 def test_set_doc_properties():
     document = Document(docx_path('docproperties.docx'))
     props = CustomProperties(document)
