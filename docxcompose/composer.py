@@ -159,6 +159,14 @@ class Composer(object):
             new_rid = self.doc.part.relate_to(new_img_part, RT.IMAGE)
             blip.set('{%s}embed' % NS['r'], new_rid)
 
+            # handle external reference as images can be embedded and have an
+            # external reference
+            rid = blip.get('{%s}link' % NS['r'])
+            if rid:
+                rel = doc.part.rels[rid]
+                new_rel = self.add_relationship(None, self.doc.part, rel)
+                blip.set('{%s}link' % NS['r'], new_rel.rId)
+
     def add_shapes(self, doc, element):
         shapes = xpath(element, './/v:shape/v:imagedata')
         for shape in shapes:

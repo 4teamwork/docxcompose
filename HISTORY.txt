@@ -5,7 +5,8 @@ Changelog
 1.1.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Handle embedded images that also have an external reference.
+  [buchi]
 
 
 1.1.1 (2020-05-04)
