@@ -80,6 +80,7 @@ class Composer(object):
         self.add_styles_from_other_parts(doc)
         self.renumber_bookmarks()
         self.renumber_docpr_ids()
+        self.renumber_nvpicpr_ids()
         self.fix_section_types(doc)
 
     def save(self, filename):
@@ -556,12 +557,42 @@ class Composer(object):
             bookmark_id += 1
 
     def renumber_docpr_ids(self):
+        # Ensure that non-visual drawing properties have a unique id
         doc_prs = xpath(
             self.doc.element.body, './/wp:docPr')
         doc_pr_id = 1
         for doc_pr in doc_prs:
             doc_pr.id = doc_pr_id
             doc_pr_id += 1
+
+        parts = [
+            rel.target_part for rel in self.doc.part.rels.values()
+            if rel.reltype in [RT.HEADER, RT.FOOTER, ]
+        ]
+        for part in parts:
+            doc_prs = xpath(part.element, './/wp:docPr')
+            for doc_pr in doc_prs:
+                doc_pr.id = doc_pr_id
+                doc_pr_id += 1
+
+    def renumber_nvpicpr_ids(self):
+        # Ensure that non-visual image properties have a unique id
+        c_nv_prs = xpath(
+            self.doc.element.body, './/pic:cNvPr')
+        c_nv_pr_id = 1
+        for c_nv_pr in c_nv_prs:
+            c_nv_pr.id = c_nv_pr_id
+            c_nv_pr_id += 1
+
+        parts = [
+            rel.target_part for rel in self.doc.part.rels.values()
+            if rel.reltype in [RT.HEADER, RT.FOOTER, ]
+        ]
+        for part in parts:
+            c_nv_prs = xpath(part.element, './/pic:cNvPr')
+            for c_nv_pr in c_nv_prs:
+                c_nv_pr.id = c_nv_pr_id
+                c_nv_pr_id += 1
 
     def fix_section_types(self, doc):
         # The section type determines how the contents of the section will be

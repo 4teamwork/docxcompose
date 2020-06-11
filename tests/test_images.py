@@ -16,3 +16,11 @@ def test_embedded_and_external_image():
         "master.docx", "embedded_and_external_image.docx")
 
     assert composed == doc
+
+
+def test_renumbering_of_non_visual_properties():
+    expected = FixtureDocument("renumbering_nv_props.docx")
+    composed = ComposedDocument(
+        "header_with_image.docx", "image.docx")
+
+    assert composed == expected
