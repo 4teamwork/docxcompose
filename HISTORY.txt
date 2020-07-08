@@ -5,7 +5,7 @@ Changelog
 1.1.3 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Add method to nullify a docproperty. [deiferni]
 
 
 1.1.2 (2020-06-11)

@@ -754,6 +754,23 @@ def test_delete_doc_properties():
     assert xpath(props._element, u'.//cp:property/@pid') == ['2', '3', '4']
 
 
+def test_nullify_doc_properties():
+    document = Document(docx_path('docproperties.docx'))
+    props = CustomProperties(document)
+
+    props.nullify('Text Property')
+    props.nullify('Number Property')
+    props.nullify('Boolean Property')
+    props.nullify('Date Property')
+    props.nullify('Float Property')
+
+    assert props['Text Property'] == ''
+    assert 'Number Property' not in props
+    assert 'Boolean Property' not in props
+    assert 'Date Property' not in props
+    assert 'Float Property' not in props
+
+
 def test_set_doc_property_on_document_without_properties_creates_new_part():
     document = Document(docx_path('master.docx'))
     props = CustomProperties(document)
