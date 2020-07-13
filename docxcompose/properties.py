@@ -69,6 +69,11 @@ def vt2value(element):
         return element.text
 
 
+def is_text_property(property):
+    tag = QName(property).localname
+    return tag in ['bstr', 'lpstr', 'lpwstr']
+
+
 class CustomProperties(object):
     """Custom doc properties stored in ``/docProps/custom.xml``.
        Allows updating of doc properties in a document.
@@ -145,6 +150,23 @@ class CustomProperties(object):
             pid += 1
 
         self._update_part()
+
+    def nullify(self, key):
+        """Delete key for non text-properties, set key to empty string for
+        text.
+        """
+
+        props = xpath(
+            self._element,
+            u'.//cp:property[@name="{}"]'.format(key))
+
+        if not props:
+            raise KeyError(key)
+
+        if is_text_property(props[0][0]):
+            self[key] = ''
+        else:
+            del self[key]
 
     def __contains__(self, item):
         props = xpath(
