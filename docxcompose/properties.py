@@ -490,6 +490,34 @@ class ComplexField(FieldBase):
                 text = xpath(run, u'.//w:t')
                 if text:
                     self.w_p.remove(run)
+        else:
+            # create a <w:fldChar w:fldCharType="separate"/> run using
+            # the <w:fldChar w:fldCharType="begin"/> run as a template.
+            # the node can contain all kind of formatting information, the
+            # easiest way to preserve it seems to base new nodes on an existing
+            # node.
+            # we just swap out the fldCharType from begin to separate.
+            separate_run = deepcopy(self.begin_run)
+            w_fld_char = xpath(separate_run, 'w:fldChar')[0]
+            w_fld_char.set('{{{}}}fldCharType'.format(NS['w']), 'separate')
+
+            # create new run containing the actual docproperty value using
+            # the <w:fldChar w:fldCharType="begin"/> run as a template.
+            # the node can contain all kind of formatting information, the
+            # easiest way to preserve it seems to base new nodes on an existing
+            # node.
+            # we drop the fldChar node and insert a text node instead.
+            value_run = deepcopy(self.begin_run)
+            value_run.remove(xpath(value_run, 'w:fldChar')[0])
+            text = parse_xml('<w:t xmlns:w="{}"></w:t>'.format(NS['w']))
+            text.text = self._format_value(value)
+            value_run.append(text)
+
+            # insert newly created nodes after the node containing the
+            # docproperty field code in <w:instrText>.
+            docprop_index = self.w_p.index(self.w_r)
+            self.w_p.insert(docprop_index + 1, separate_run)
+            self.w_p.insert(docprop_index + 2, value_run)
 
     def replace_field_with_value(self):
         # Get list of <w:r> nodes for removal
