@@ -506,10 +506,7 @@ class TestUpdateAllDocproperties(object):
         for i, paragraph in enumerate(document.paragraphs):
             assert u'Bar' == paragraph.text, 'docprop {} was not updated'.format(i+1)
 
-    def test_docproperty_without_separate_does_not_get_updated(self):
-        """It would probably be better to add the value to such a field
-        during update, but that seems out of scope for now.
-        """
+    def test_docproperty_without_separate_does_get_updated(self):
         document = Document(docx_path('complex_field_without_separate.docx'))
         custom_properties = CustomProperties(document)
         properties = custom_properties.find_docprops_in_document()
@@ -544,7 +541,7 @@ class TestUpdateAllDocproperties(object):
         custom_properties.update_all()
 
         # Field with missing separate was not updated
-        assert u'Sachbearbeiter: ' == paragraphs[0].text
+        assert u'Sachbearbeiter: Test User' == paragraphs[0].text
         # Next field was updated correctly
         assert u'Dossier Titel:  Some Title' == paragraphs[1].text
 
