@@ -8,6 +8,7 @@ from docx.opc.part import Part
 from docx.oxml import parse_xml
 from docx.oxml.coreprops import CT_CoreProperties
 from docxcompose.utils import NS
+from docxcompose.utils import word_to_python_date_format
 from docxcompose.utils import xpath
 from lxml.etree import QName
 from six import binary_type
@@ -310,12 +311,16 @@ class FieldBase(object):
     def __init__(self, field_node):
         self.node = field_node
         self.name, self.date_format = self._parse_fieldname_and_format()
+        if self.date_format:
+            self.date_format = word_to_python_date_format(self.date_format)
+        else:
+            self.date_format = '%x'
 
     def _format_value(self, value):
         if isinstance(value, bool):
             return u'Y' if value else u'N'
         elif isinstance(value, datetime):
-            return value.strftime('%x')
+            return value.strftime(self.date_format)
         else:
             return text_type(value)
 
