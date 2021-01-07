@@ -385,15 +385,27 @@ class ComplexField(FieldBase):
     XPATH_PRECEDING_BEGINS = "./preceding-sibling::w:r/w:fldChar[@w:fldCharType=\"begin\"]/.."
     XPATH_FOLLOWING_ENDS = "./following-sibling::w:r/w:fldChar[@w:fldCharType=\"end\"]/.."
     XPATH_FOLLOWING_SEPARATES = "./following-sibling::w:r/w:fldChar[@w:fldCharType=\"separate\"]/.."
+    XPATH_TEXTS = "w:instrText"
 
     def __init__(self, field_node):
-        super(ComplexField, self).__init__(field_node)
         # run and paragraph containing the field
-        self.w_r = self.node.getparent()
+        self.w_r = field_node.getparent()
         self.w_p = self.w_r.getparent()
+        super(ComplexField, self).__init__(field_node)
 
     def _get_fieldname_string(self):
-        return self.node.text
+        """The field name can be split up in several instrText runs
+        so we look for all the instrText nodes between the begin and either
+        separate or end runs
+        """
+        separate_run = self.get_separate_run()
+        last = (self.w_p.index(separate_run) if separate_run is not None
+                else self.w_p.index(self.end_run))
+        runs = [run for run in self._runs if self.w_p.index(run) < last]
+        texts = []
+        for run in runs:
+            texts.extend(xpath(run, self.XPATH_TEXTS))
+        return "".join([each.text for each in texts])
 
     @property
     def begin_run(self):

@@ -5,6 +5,7 @@ Changelog
 1.3.1 (unreleased)
 ------------------
 
+- Add support for complex fields with fieldname split into several runs. [njohner]
 - Add support for date format switches. [njohner]
 
 

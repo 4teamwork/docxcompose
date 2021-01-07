@@ -131,6 +131,34 @@ class TestIdentifyDocpropertiesInDocument(object):
         assert runs[1] == prop.w_r
         assert runs[2] == prop.end_run
 
+    def test_finds_field_name_and_format_when_split_in_several_runs(self):
+        document = Document(docx_path('complex_field_with_split_fieldname.docx'))
+        properties = CustomProperties(document).find_docprops_in_document()
+
+        assert 1 == len(properties), \
+            'input should contain one complex field docproperties'
+
+        prop = properties[0]
+
+        # make sure that the field name and format are indeed split over several runs
+        assert [[' DOCPROPERTY "ogg.document.document_date"  \\@ "ddd'],
+                ['d'],
+                [' dd'],
+                [' '],
+                ['MM'],
+                ['M'],
+                ['M'],
+                [' yy'],
+                ['yy hh:mm:s" \\* MERGEFORMAT ']] == \
+               [[each.text for each in xpath(run, "w:instrText")] for run in prop._runs[:9]]
+
+        assert ' DOCPROPERTY "ogg.document.document_date"  \\@ "ddd' +\
+            'd dd MMMM yyyy hh:mm:s" \\* MERGEFORMAT ' ==\
+            prop._get_fieldname_string()
+
+        assert 'ogg.document.document_date' == prop.name
+        assert '%A %d %B %Y %H:%M:%-S' == prop.date_format
+
     def test_finds_header_footer_of_different_sections(self):
         document = Document(docx_path('docproperties_header_footer_3_sections.docx'))
         properties = CustomProperties(document).find_docprops_in_document()
@@ -558,6 +586,17 @@ class TestUpdateAllDocproperties(object):
         expected_values = [u'23.01.20', u'Thursday 23 January 2020', u'23-1-20 10:0:0']
         for i, (expected, paragraph) in enumerate(zip(expected_values, document.paragraphs)):
             assert expected == paragraph.text, 'docprop {} was not updated correctly'.format(i+1)
+
+    def test_docprops_with_split_fieldname_get_updated(self):
+        document = Document(docx_path('complex_field_with_split_fieldname.docx'))
+        assert 1 == len(document.paragraphs), 'input file should contain 1 paragraph'
+
+        paragraph = document.paragraphs[0]
+        assert 'Datum: Tuesday 09 February 2021 00:00:00' == paragraph.text
+
+        CustomProperties(document).update_all()
+
+        assert 'Datum: Friday 11 March 2022 10:00:0' == paragraph.text
 
 
 class TestUpdateSpecificDocproperty(object):
