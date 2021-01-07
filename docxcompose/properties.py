@@ -303,13 +303,13 @@ class CustomProperties(object):
 class FieldBase(object):
     """Class used to represent a docproperty field in the document.xml.
     """
-    fieldname_search_expr = re.compile(
-            r'DOCPROPERTY +"{0,1}([^\\]*?)"{0,1} +\\\* MERGEFORMAT',
-            flags=re.UNICODE)
+    fieldname_and_format_search_expr = re.compile(
+        r'DOCPROPERTY +"{0,1}([^\\]*?)"{0,1} +(?:\\\@ +"{0,1}([^\\]*?)"{0,1} +){0,1}\\\* MERGEFORMAT',
+        flags=re.UNICODE)
 
     def __init__(self, field_node):
         self.node = field_node
-        self.name = self._parse_fieldname()
+        self.name, self.date_format = self._parse_fieldname_and_format()
 
     def _format_value(self, value):
         if isinstance(value, bool):
@@ -333,11 +333,12 @@ class FieldBase(object):
     def _get_fieldname_string(self):
         raise NotImplementedError()
 
-    def _parse_fieldname(self):
-        match = self.fieldname_search_expr.search(self._get_fieldname_string())
+    def _parse_fieldname_and_format(self):
+        match = self.fieldname_and_format_search_expr.search(
+            self._get_fieldname_string())
         if match is None:
-            return None
-        return match.groups()[0]
+            return None, None
+        return match.groups()
 
 
 class SimpleField(FieldBase):

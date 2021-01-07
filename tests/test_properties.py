@@ -545,6 +545,21 @@ class TestUpdateAllDocproperties(object):
         # Next field was updated correctly
         assert u'Dossier Titel:  Some Title' == paragraphs[1].text
 
+    def test_date_docprops_with_format_get_updated(self):
+        document = Document(docx_path('date_docproperties_with_format.docx'))
+        assert 1 == len(document.paragraphs), 'input file should contain 1 paragraph'
+
+        for paragraph in document.paragraphs:
+            assert 1 == len(xpath(paragraph._p, './/w:instrText')), \
+                'paragraph should contain one complex field docproperties'
+
+            assert u'11.06.2019' == paragraph.text
+
+        CustomProperties(document).update_all()
+
+        for i, paragraph in enumerate(document.paragraphs):
+            assert u'01/23/20' == paragraph.text, 'docprop {} was not updated correctly'.format(i+1)
+
 
 class TestUpdateSpecificDocproperty(object):
 
