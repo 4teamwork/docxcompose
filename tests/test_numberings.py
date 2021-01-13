@@ -35,7 +35,7 @@ def test_restarts_numbering_if_sequence_is_split_across_elements(numbering_with_
     numbering_ids = [each.val for each in xpath(
         numbering_with_paragraphs.doc.element.body, './/w:numId')]
 
-    assert [3, 3, 3, 3, 4, 4, 4] == numbering_ids
+    assert numbering_ids == [3, 3, 3, 3, 4, 4, 4]
 
 
 def test_numberings(static_reseed):

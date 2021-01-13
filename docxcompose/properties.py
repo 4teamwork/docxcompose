@@ -8,6 +8,7 @@ from docx.opc.part import Part
 from docx.oxml import parse_xml
 from docx.oxml.coreprops import CT_CoreProperties
 from docxcompose.utils import NS
+from docxcompose.utils import word_to_python_date_format
 from docxcompose.utils import xpath
 from lxml.etree import QName
 from six import binary_type
@@ -303,19 +304,23 @@ class CustomProperties(object):
 class FieldBase(object):
     """Class used to represent a docproperty field in the document.xml.
     """
-    fieldname_search_expr = re.compile(
-            r'DOCPROPERTY +"{0,1}([^\\]*?)"{0,1} +\\\* MERGEFORMAT',
-            flags=re.UNICODE)
+    fieldname_and_format_search_expr = re.compile(
+        r'DOCPROPERTY +"{0,1}([^\\]*?)"{0,1} +(?:\\\@ +"{0,1}([^\\]*?)"{0,1} +){0,1}\\\* MERGEFORMAT',
+        flags=re.UNICODE)
 
     def __init__(self, field_node):
         self.node = field_node
-        self.name = self._parse_fieldname()
+        self.name, self.date_format = self._parse_fieldname_and_format()
+        if self.date_format:
+            self.date_format = word_to_python_date_format(self.date_format)
+        else:
+            self.date_format = '%x'
 
     def _format_value(self, value):
         if isinstance(value, bool):
             return u'Y' if value else u'N'
         elif isinstance(value, datetime):
-            return value.strftime('%x')
+            return value.strftime(self.date_format)
         else:
             return text_type(value)
 
@@ -333,11 +338,12 @@ class FieldBase(object):
     def _get_fieldname_string(self):
         raise NotImplementedError()
 
-    def _parse_fieldname(self):
-        match = self.fieldname_search_expr.search(self._get_fieldname_string())
+    def _parse_fieldname_and_format(self):
+        match = self.fieldname_and_format_search_expr.search(
+            self._get_fieldname_string())
         if match is None:
-            return None
-        return match.groups()[0]
+            return None, None
+        return match.groups()
 
 
 class SimpleField(FieldBase):
@@ -379,15 +385,27 @@ class ComplexField(FieldBase):
     XPATH_PRECEDING_BEGINS = "./preceding-sibling::w:r/w:fldChar[@w:fldCharType=\"begin\"]/.."
     XPATH_FOLLOWING_ENDS = "./following-sibling::w:r/w:fldChar[@w:fldCharType=\"end\"]/.."
     XPATH_FOLLOWING_SEPARATES = "./following-sibling::w:r/w:fldChar[@w:fldCharType=\"separate\"]/.."
+    XPATH_TEXTS = "w:instrText"
 
     def __init__(self, field_node):
-        super(ComplexField, self).__init__(field_node)
         # run and paragraph containing the field
-        self.w_r = self.node.getparent()
+        self.w_r = field_node.getparent()
         self.w_p = self.w_r.getparent()
+        super(ComplexField, self).__init__(field_node)
 
     def _get_fieldname_string(self):
-        return self.node.text
+        """The field name can be split up in several instrText runs
+        so we look for all the instrText nodes between the begin and either
+        separate or end runs
+        """
+        separate_run = self.get_separate_run()
+        last = (self.w_p.index(separate_run) if separate_run is not None
+                else self.w_p.index(self.end_run))
+        runs = [run for run in self._runs if self.w_p.index(run) < last]
+        texts = []
+        for run in runs:
+            texts.extend(xpath(run, self.XPATH_TEXTS))
+        return "".join([each.text for each in texts])
 
     @property
     def begin_run(self):

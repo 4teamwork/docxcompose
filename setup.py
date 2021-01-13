@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Installer for the ftw.flamegraph package."""
+"""Installer for the docxcompose package."""
 
 from setuptools import find_packages
 from setuptools import setup
