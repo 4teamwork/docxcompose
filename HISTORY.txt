@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.3.1 (unreleased)
+1.3.1 (2021-01-13)
 ------------------
 
 - Add support for complex fields with fieldname split into several runs. [njohner]
