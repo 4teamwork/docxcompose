@@ -270,8 +270,9 @@ class Composer(object):
                         if our_linked_style_id not in our_style_ids:
                             our_linked_style = doc.styles.element.get_by_id(
                                 linked_style_id)
-                            self.doc.styles.element.append(deepcopy(
-                                our_linked_style))
+                            if our_linked_style is not None:
+                                self.doc.styles.element.append(deepcopy(
+                                    our_linked_style))
             else:
                 # Create a mapping for abstractNumIds used in existing styles
                 # This is used when adding numberings to avoid having multiple
