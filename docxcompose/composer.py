@@ -259,18 +259,19 @@ class Composer(object):
             our_style_id = self.mapped_style_id(style_id)
             if our_style_id not in our_style_ids:
                 style_element = deepcopy(doc.styles.element.get_by_id(style_id))
-                self.doc.styles.element.append(style_element)
-                self.add_numberings(doc, style_element)
-                # Also add linked styles
-                linked_style_ids = xpath(style_element, './/w:link/@w:val')
-                if linked_style_ids:
-                    linked_style_id = linked_style_ids[0]
-                    our_linked_style_id = self.mapped_style_id(linked_style_id)
-                    if our_linked_style_id not in our_style_ids:
-                        our_linked_style = doc.styles.element.get_by_id(
-                            linked_style_id)
-                        self.doc.styles.element.append(deepcopy(
-                            our_linked_style))
+                if style_element is not None:
+                    self.doc.styles.element.append(style_element)
+                    self.add_numberings(doc, style_element)
+                    # Also add linked styles
+                    linked_style_ids = xpath(style_element, './/w:link/@w:val')
+                    if linked_style_ids:
+                        linked_style_id = linked_style_ids[0]
+                        our_linked_style_id = self.mapped_style_id(linked_style_id)
+                        if our_linked_style_id not in our_style_ids:
+                            our_linked_style = doc.styles.element.get_by_id(
+                                linked_style_id)
+                            self.doc.styles.element.append(deepcopy(
+                                our_linked_style))
             else:
                 # Create a mapping for abstractNumIds used in existing styles
                 # This is used when adding numberings to avoid having multiple
