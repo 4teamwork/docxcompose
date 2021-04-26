@@ -749,6 +749,14 @@ def test_get_doc_properties():
     assert props.get('Date Property') == datetime(2019, 6, 11, 10, 0)
 
 
+def test_get_doc_property_is_case_insensitive():
+    document = Document(docx_path('docproperties.docx'))
+    props = CustomProperties(document)
+
+    assert props['text property'] == 'Foo Bar'
+    assert props.get('text property') == 'Foo Bar'
+
+
 def test_add_doc_properties():
     document = Document(docx_path('docproperties.docx'))
     props = CustomProperties(document)
@@ -791,6 +799,14 @@ def test_set_doc_properties():
     assert props['Date Property'] == datetime(2019, 10, 20, 12, 0)
 
 
+def test_set_doc_property_is_case_insensitive():
+    document = Document(docx_path('docproperties.docx'))
+    props = CustomProperties(document)
+
+    props['text property'] = 'baz'
+    assert props['Text Property'] == 'baz'
+
+
 def test_delete_doc_properties():
     document = Document(docx_path('docproperties.docx'))
     props = CustomProperties(document)
@@ -802,6 +818,22 @@ def test_delete_doc_properties():
     assert 'Number Property' not in props
 
     assert xpath(props._element, u'.//cp:property/@pid') == ['2', '3', '4']
+
+
+def test_delete_doc_property_is_case_insensitive():
+    document = Document(docx_path('docproperties.docx'))
+    props = CustomProperties(document)
+
+    del props['text property']
+
+    assert 'Text Property' not in props
+
+
+def test_contains_is_case_insensitive():
+    document = Document(docx_path('docproperties.docx'))
+    props = CustomProperties(document)
+
+    assert 'text property' in props
 
 
 def test_nullify_doc_properties():
@@ -819,6 +851,14 @@ def test_nullify_doc_properties():
     assert 'Boolean Property' not in props
     assert 'Date Property' not in props
     assert 'Float Property' not in props
+
+
+def test_nullify_doc_property_is_case_insensitive():
+    document = Document(docx_path('docproperties.docx'))
+    props = CustomProperties(document)
+
+    props.nullify('text property')
+    assert props['Text Property'] == ''
 
 
 def test_set_doc_property_on_document_without_properties_creates_new_part():

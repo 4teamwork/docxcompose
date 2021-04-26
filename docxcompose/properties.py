@@ -10,6 +10,7 @@ from docx.oxml.coreprops import CT_CoreProperties
 from docxcompose.utils import NS
 from docxcompose.utils import word_to_python_date_format
 from docxcompose.utils import xpath
+from lxml.etree import FunctionNamespace
 from lxml.etree import QName
 from six import binary_type
 from six import text_type
@@ -75,6 +76,16 @@ def is_text_property(property):
     return tag in ['bstr', 'lpstr', 'lpwstr']
 
 
+ns = FunctionNamespace(None)
+
+
+# lxml doesn't support XPath 2.0 functions
+# Thus we implement lower-case() as an extension function
+@ns('lower-case')
+def lower_case(context, a):
+    return [el.lower() for el in a]
+
+
 class CustomProperties(object):
     """Custom doc properties stored in ``/docProps/custom.xml``.
        Allows updating of doc properties in a document.
@@ -112,7 +123,7 @@ class CustomProperties(object):
         """Get the value of a property."""
         props = xpath(
             self._element,
-            u'.//cp:property[@name="{}"]'.format(key))
+            u'.//cp:property[lower-case(@name)="{}"]'.format(key.lower()))
 
         if not props:
             raise KeyError(key)
@@ -123,7 +134,7 @@ class CustomProperties(object):
         """Set the value of a property."""
         props = xpath(
             self._element,
-            u'.//cp:property[@name="{}"]'.format(key))
+            u'.//cp:property[lower-case(@name)="{}"]'.format(key.lower()))
         if not props:
             self.add(key, value)
             return
@@ -138,7 +149,7 @@ class CustomProperties(object):
         """Delete a property."""
         props = xpath(
             self._element,
-            u'.//cp:property[@name="{}"]'.format(key))
+            u'.//cp:property[lower-case(@name)="{}"]'.format(key.lower()))
 
         if not props:
             raise KeyError(key)
@@ -159,7 +170,7 @@ class CustomProperties(object):
 
         props = xpath(
             self._element,
-            u'.//cp:property[@name="{}"]'.format(key))
+            u'.//cp:property[lower-case(@name)="{}"]'.format(key.lower()))
 
         if not props:
             raise KeyError(key)
@@ -172,7 +183,7 @@ class CustomProperties(object):
     def __contains__(self, item):
         props = xpath(
             self._element,
-            u'.//cp:property[@name="{}"]'.format(item))
+            u'.//cp:property[lower-case(@name)="{}"]'.format(item.lower()))
         if props:
             return True
         else:
