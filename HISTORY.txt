@@ -5,7 +5,7 @@ Changelog
 1.3.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Make Doc Properties case-insensitive. [buchi]
 
 
 1.3.1 (2021-01-13)
