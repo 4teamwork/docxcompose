@@ -72,6 +72,7 @@ class Composer(object):
             self.add_numberings(doc, element)
             self.restart_first_numbering(doc, element)
             self.add_images(doc, element)
+            self.add_diagrams(doc, element)            
             self.add_shapes(doc, element)
             self.add_footnotes(doc, element)
             self.remove_header_and_footer_references(doc, element)
@@ -144,6 +145,20 @@ class Composer(object):
 
         return new_rel
 
+    def add_diagrams(self, doc, element):
+        dgm_rels = xpath(element, './/dgm:relIds[@r:dm]')
+        for dgm_rel in dgm_rels:
+            for item, rt_type in (
+                    ('dm', RT.DIAGRAM_DATA),
+                    ('lo', RT.DIAGRAM_LAYOUT),
+                    ('qs', RT.DIAGRAM_QUICK_STYLE),
+                    ('cs', RT.DIAGRAM_COLORS)
+            ):
+                dm_rid = dgm_rel.get('{%s}%s' % (NS['r'], item))
+                dm_part = doc.part.rels[dm_rid].target_part
+                new_rid = self.doc.part.relate_to(dm_part, rt_type)
+                dgm_rel.set('{%s}%s' % (NS['r'], item), new_rid)
+                
     def add_images(self, doc, element):
         """Add images from the given document used in the given element."""
         blips = xpath(
