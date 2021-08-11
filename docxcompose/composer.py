@@ -452,7 +452,7 @@ class Composer(object):
         style_id = xpath(element, './/w:pStyle/@w:val')
         if not style_id:
             return
-        style_id = self.mapped_style_id(style_id[0])
+        style_id = style_id[0]
         if style_id in self._numbering_restarted:
             return
         style_element = self.doc.styles.element.get_by_id(style_id)
