@@ -38,6 +38,14 @@ def test_restarts_numbering_if_sequence_is_split_across_elements(numbering_with_
     assert numbering_ids == [3, 3, 3, 3, 4, 4, 4]
 
 
+def test_restart_numbering_manages_shared_style_names(static_reseed):
+    doc = FixtureDocument("common_stylename_different_id.docx")
+    composed = ComposedDocument(
+        "common_stylename_different_id1.docx",
+        "common_stylename_different_id2.docx")
+    assert composed == doc
+
+
 def test_numberings(static_reseed):
     doc = FixtureDocument("numberings.docx")
     composed = ComposedDocument(
