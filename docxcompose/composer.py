@@ -329,7 +329,11 @@ class Composer(object):
 
         next_num_id, next_anum_id = self._next_numbering_ids()
 
-        src_numbering_part = doc.part.numbering_part
+        # Workaroung for issue #68
+        try:
+            src_numbering_part = doc.part.numbering_part
+        except NotImplementedError:
+            return
 
         for num_id in num_ids:
             if num_id in self.num_id_mapping:
