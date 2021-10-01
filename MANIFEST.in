@@ -2,5 +2,6 @@ graft docxcompose
 prune tests
 include *.rst
 include *.txt
+include LICENSE
 exclude .gitignore
 global-exclude *.pyc
