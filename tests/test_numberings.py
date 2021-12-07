@@ -24,6 +24,10 @@ def test_do_not_restart_numbering_of_bullets(mixed_numberings):
     assert len(xpath(paragraphs[10], './/w:numId')) == 0
 
 
+def test_do_not_break_on_custom_styled_numbering(custom_styled_numbering):
+    assert custom_styled_numbering.doc.element.xpath('.//w:numId/@w:val') == ['2']*4
+
+
 def test_preserve_zero_numbering_references(numberings_with_zero_reference):
     numberings_with_zero_ref = xpath(
         numberings_with_zero_reference.doc.element.body,
@@ -145,4 +149,11 @@ def mixed_numberings():
 def numbering_with_paragraphs():
     composer = Composer(Document(docx_path("master.docx")))
     composer.append(Document(docx_path("numbering_with_paragraphs_in_between.docx")))
+    return composer
+
+
+@pytest.fixture
+def custom_styled_numbering():
+    composer = Composer(Document(docx_path('master.docx')))
+    composer.append(Document(docx_path("custom_list_style.docx")))
     return composer
