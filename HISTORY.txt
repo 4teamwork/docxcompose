@@ -5,7 +5,7 @@ Changelog
 1.3.4 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Avoid IndexError when processing documents that have custom styled numbering definitions. [lonetwin]
 
 
 1.3.3 (2021-08-12)
