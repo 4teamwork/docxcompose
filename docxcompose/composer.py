@@ -491,7 +491,7 @@ class Composer(object):
         num_fmt = xpath(
             anum_element[0], './/w:lvl[@w:ilvl="0"]/w:numFmt/@w:val')
         # Do not restart numbering of bullets
-        if num_fmt[0] == 'bullet':
+        if num_fmt and num_fmt[0] == 'bullet':
             return
 
         new_num_element = deepcopy(num_element[0])
