@@ -5,7 +5,8 @@ Changelog
 1.3.5 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Support missing style elements. [BryceStevenWilley]
+- Correctly handle headers and footers when merging documents with sections. [njohner]
 
 
 1.3.4 (2021-12-20)

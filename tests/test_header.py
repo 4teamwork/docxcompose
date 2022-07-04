@@ -22,6 +22,13 @@ def test_master_header_and_footer_are_preserved_when_adding_sections():
     assert composed == doc
 
 
+def test_header_footer():
+    doc = FixtureDocument("header_footer.docx")
+    composed = ComposedDocument(
+        "header_footer.docx", "header_footer.docx")
+    assert composed == doc
+
+
 def test_header_footer_sections():
     doc = FixtureDocument("header_footer_sections.docx")
     composed = ComposedDocument(
