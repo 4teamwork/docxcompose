@@ -58,6 +58,10 @@ def test_styles_are_not_switched_for_first_numbering_element():
 
     assert composed == doc
 
+def test_continue_when_no_styles():
+    """Expects not to throw a type error"""
+    doc = ComposedDocument("aatmay.docx", "aatmay.docx")
+
 
 @pytest.fixture
 def merged_styles():
