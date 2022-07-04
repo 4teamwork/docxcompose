@@ -670,19 +670,32 @@ class Composer(object):
 
         first_new_section_idx = len(self.doc.sections) - len(doc.sections)
 
+        last_section = self.doc.sections[-1]
+        first_section = self.doc.sections[first_new_section_idx]
         for footer_name in ('footer', 'even_page_footer', 'first_page_footer'):
-            footer_main = getattr(self.doc.sections[-1], footer_name)
+            footer_main = getattr(last_section, footer_name)
             if not footer_main._has_definition:
                 continue
-            footer_sec = getattr(self.doc.sections[first_new_section_idx], footer_name)
+            footer_sec = getattr(first_section, footer_name)
             rid = footer_main._sectPr.get_footerReference(footer_main._hdrftr_index).rId
             footer_sec._sectPr.add_footerReference(footer_main._hdrftr_index, rid)
 
         for header_name in ('header', 'even_page_header', 'first_page_header'):
-            header_main = getattr(self.doc.sections[-1], header_name)
+            header_main = getattr(last_section, header_name)
             if not header_main._has_definition:
                 continue
-            header_sec = getattr(self.doc.sections[first_new_section_idx], header_name)
+            header_sec = getattr(first_section, header_name)
             rid = header_main._sectPr.get_headerReference(header_main._hdrftr_index).rId
             header_sec._sectPr.add_headerReference(header_main._hdrftr_index, rid)
+
+        # We also need to move the page number type tag to that section
+        # properties and remove it from the section properties from the body.
+        last_sect_pr = last_section._sectPr
+        first_sect_pr = first_section._sectPr
+
+        pg_num_types = last_sect_pr.xpath("w:pgNumType")
+        for pg_num_type in pg_num_types:
+            last_sect_pr.remove(pg_num_type)
+            first_sect_pr.append(pg_num_type)
+
         self.first_section_properties_added = True
