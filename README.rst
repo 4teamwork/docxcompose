@@ -68,3 +68,9 @@ The expected output can now be tested as follows:
 Should the assertion fail the output file will be stored in the folder
 `docs/composed_debug` with the filename of the fixture file, `expected.docx`
 in case of this example.
+
+
+Headers and footers
+-------------------
+
+The first document is considered as the main template and headers and footers from the other documents are ignored, so that the header and footer of the first document is used throughout the merged file.
