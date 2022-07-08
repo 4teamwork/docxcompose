@@ -40,6 +40,8 @@ class Composer(object):
 
         self.reset_reference_mapping()
 
+        self.first_section_properties_added = False
+
     def reset_reference_mapping(self):
         self.num_id_mapping = {}
         self.anum_id_mapping = {}
@@ -64,6 +66,13 @@ class Composer(object):
 
         for element in doc.element.body:
             if isinstance(element, CT_SectPr):
+                """This will lead to unexpected behaviors, for example if one
+                of the added documents with landscape set for the last section
+                the page orientation will get lost here. Still this is mostly
+                ok, and otherwise we would need to create a section for each
+                document added, i.e. move the properties into the last
+                paragraph and also decide which properties we allow to overwrite
+                and which should inherit from the main template."""
                 continue
             element = deepcopy(element)
             self.doc.element.body.insert(index, element)
@@ -82,7 +91,21 @@ class Composer(object):
         self.renumber_bookmarks()
         self.renumber_docpr_ids()
         self.renumber_nvpicpr_ids()
+        # The two methods below attempt to fix a general issue we have with
+        # sections and their properties which is not correctly solved yet.
+        # Right now the situation is really messy. When there is only one
+        # section per document being assembled, then we remove the properties
+        # of all added documents and only use the properties of the main template.
+        # When a document has more than one section, then we keep the properties
+        # for all the sections of that document except the last one. Also
+        # note that for the first such document added, the properties of its
+        # first section will get applied to the everything that came before.
+        # This is because of how sections and section properties are
+        # defined, i.e. sections are defined by the secPr tags inside the last
+        # paragraph of a section, except for the last section which has its
+        # secPr tag in the body...
         self.fix_section_types(doc)
+        self.fix_header_and_footers(doc)
 
     def save(self, filename):
         self.doc.save(filename)
@@ -626,3 +649,55 @@ class Composer(object):
         first_new_section_idx = len(self.doc.sections) - len(doc.sections)
         self.doc.sections[first_new_section_idx].start_type = self.doc.sections[-1].start_type
         self.doc.sections[-1].start_type = doc.sections[-1].start_type
+
+    def fix_header_and_footers(self, doc):
+        """
+        The master document usually only has one section, hence its section
+        properties are defined directly in the body of the document and apply
+        to the last section of the document. For all other sections but the
+        last one, section properties are defined in the last paragraph of
+        the section.
+        Headers and footers are inherited from the previous section properties
+        if they are not defined in a given section. If not defined in the first
+        section, then blank headers and footers will be used., so we need to
+        make sure to add the definition from the main template in the first
+        section of the document if there are more than one sections.
+        """
+
+        if self.first_section_properties_added:
+            return
+
+        if len(self.doc.sections) == 1 or len(doc.sections) == 1:
+            return
+
+        first_new_section_idx = len(self.doc.sections) - len(doc.sections)
+
+        last_section = self.doc.sections[-1]
+        first_section = self.doc.sections[first_new_section_idx]
+        for footer_name in ('footer', 'even_page_footer', 'first_page_footer'):
+            footer_main = getattr(last_section, footer_name)
+            if not footer_main._has_definition:
+                continue
+            footer_sec = getattr(first_section, footer_name)
+            rid = footer_main._sectPr.get_footerReference(footer_main._hdrftr_index).rId
+            footer_sec._sectPr.add_footerReference(footer_main._hdrftr_index, rid)
+
+        for header_name in ('header', 'even_page_header', 'first_page_header'):
+            header_main = getattr(last_section, header_name)
+            if not header_main._has_definition:
+                continue
+            header_sec = getattr(first_section, header_name)
+            rid = header_main._sectPr.get_headerReference(header_main._hdrftr_index).rId
+            header_sec._sectPr.add_headerReference(header_main._hdrftr_index, rid)
+
+        # We also need to move the page number type tag to that section
+        # properties and remove it from the section properties from the body.
+        last_sect_pr = last_section._sectPr
+        first_sect_pr = first_section._sectPr
+
+        pg_num_types = last_sect_pr.xpath("w:pgNumType")
+        for pg_num_type in pg_num_types:
+            last_sect_pr.remove(pg_num_type)
+            first_sect_pr.append(pg_num_type)
+
+        self.first_section_properties_added = True
