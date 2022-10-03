@@ -1,15 +1,21 @@
 from datetime import datetime
 from docx import Document
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
+from docx.oxml import parse_xml
 from docxcompose.properties import ComplexField
+from docxcompose.properties import CUSTOM_PROPERTY_TYPES
 from docxcompose.properties import CustomProperties
 from docxcompose.properties import SimpleField
+from docxcompose.properties import value2vt
+from docxcompose.properties import vt2value
 from docxcompose.utils import xpath
+from lxml.etree import tostring
 from utils import assert_complex_field_value
 from utils import assert_simple_field_value
 from utils import cached_complex_field_values
-from utils import simple_field_expression
 from utils import docx_path
+from utils import simple_field_expression
+import pytest
 
 
 class TestIdentifyDocpropertiesInDocument(object):
@@ -905,3 +911,43 @@ def test_doc_properties_items():
         ('Date Property', datetime(2019, 6, 11, 10, 0)),
         ('Float Property', 1.1),
     ]
+
+
+def test_vt2value_value2vt_roundtrip():
+    assert vt2value(value2vt(42)) == 42
+    assert vt2value(value2vt(True)) is True
+    assert vt2value(value2vt(1.1)) == pytest.approx(1.1)
+    dt = datetime(2019, 6, 11, 10, 0)
+    assert vt2value(value2vt(dt)) == dt
+    assert vt2value(value2vt(u'foo')) == u'foo'
+    assert vt2value(value2vt(u'')) == u''
+
+    node = parse_xml(CUSTOM_PROPERTY_TYPES['int'])
+    node.text = '42'
+    assert tostring(value2vt(vt2value(node))) == tostring(node)
+
+    node = parse_xml(CUSTOM_PROPERTY_TYPES['bool'])
+    node.text = 'true'
+    assert tostring(value2vt(vt2value(node))) == tostring(node)
+
+    node = parse_xml(CUSTOM_PROPERTY_TYPES['float'])
+    node.text = '1.1'
+    assert tostring(value2vt(vt2value(node))) == tostring(node)
+
+    node = parse_xml(CUSTOM_PROPERTY_TYPES['datetime'])
+    node.text = '2003-12-31T10:14:55Z'
+    assert tostring(value2vt(vt2value(node))) == tostring(node)
+
+    node = parse_xml(CUSTOM_PROPERTY_TYPES['text'])
+    node.text = 'foo'
+    assert tostring(value2vt(vt2value(node))) == tostring(node)
+
+    node = parse_xml(CUSTOM_PROPERTY_TYPES['text'])
+    node.text = ''
+    assert tostring(value2vt(vt2value(node))) == tostring(node)
+
+
+def test_vt2value_returns_empty_string_for_missing_text_node():
+    node = parse_xml(CUSTOM_PROPERTY_TYPES['text'])
+    node.text = None
+    assert vt2value(node) == u''
