@@ -67,6 +67,8 @@ def vt2value(element):
         return float(element.text)
     elif tag == 'filetime':
         return CT_CoreProperties._parse_W3CDTF_to_datetime(element.text)
+    elif tag == 'lpwstr':
+        return element.text if element.text else u''
     else:
         return element.text
 
