@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.3.6 (unreleased)
+1.3.6 (2022-10-05)
 ------------------
 
 - vt2value(): Convert empty <vt:lpwstr/> nodes to empty string instead of None. [lgraf]
