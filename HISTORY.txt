@@ -5,7 +5,7 @@ Changelog
 1.3.7 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Respect document language when updating datefields. [njohner]
 
 
 1.3.6 (2022-10-05)
