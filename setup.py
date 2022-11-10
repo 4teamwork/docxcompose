@@ -36,6 +36,7 @@ setup(
         'python-docx >= 0.8.8',
         'setuptools',
         'six',
+        'babel',
     ],
     extras_require={
         'test': tests_require,
@@ -44,6 +45,6 @@ setup(
     entry_points={
         'console_scripts': [
             'docxcompose = docxcompose.command:main'
-      ]
-  },
+        ]
+    },
 )
