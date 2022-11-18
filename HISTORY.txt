@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.3.7 (unreleased)
+1.3.7 (2022-11-18)
 ------------------
 
 - Respect document language when updating datefields. [njohner]
