@@ -15,6 +15,7 @@ from utils import assert_simple_field_value
 from utils import cached_complex_field_values
 from utils import docx_path
 from utils import simple_field_expression
+import docx
 import pytest
 
 
@@ -164,7 +165,7 @@ class TestIdentifyDocpropertiesInDocument(object):
             'd dd MMMM yyyy hh:mm:s" \\* MERGEFORMAT '
 
         assert prop.name == 'ogg.document.document_date'
-        assert prop.date_format == '%A %d %B %Y %H:%M:%-S'
+        assert prop.date_format == 'EEEE dd MMMM yyyy hh:mm:s'
 
     def test_finds_header_footer_of_different_sections(self):
         document = Document(docx_path('docproperties_header_footer_3_sections.docx'))
@@ -590,9 +591,24 @@ class TestUpdateAllDocproperties(object):
 
         CustomProperties(document).update_all()
 
-        expected_values = [u'23.01.20', u'Thursday 23 January 2020', u'23-1-20 10:0:0']
+        expected_values = [u'23.01.20', u'jeudi 23 janvier 2020', u'23-1-20 10:0:0']
         for i, (expected, paragraph) in enumerate(zip(expected_values, document.paragraphs)):
             assert paragraph.text == expected, 'docprop {} was not updated correctly'.format(i+1)
+
+    def test_date_docprops_respect_language(self):
+        document = Document(docx_path('date_docproperties_with_format.docx'))
+        assert len(document.paragraphs) == 3, 'input file should contain 3 paragraph'
+
+        CustomProperties(document).update_all()
+        document.paragraphs[1].text == u'jeudi 23 janvier 2020'
+
+        document.element.xpath('.//w:lang')[0].set(docx.oxml.shared.qn('w:val'),'de-CH')
+        CustomProperties(document).update_all()
+        document.paragraphs[1].text == u'Donnerstag 23 Januar 2020'
+
+        document.element.xpath('.//w:lang')[0].set(docx.oxml.shared.qn('w:val'),'en-US')
+        CustomProperties(document).update_all()
+        document.paragraphs[1].text == u'Thursday 23 January 2020'
 
     def test_docprops_with_split_fieldname_get_updated(self):
         document = Document(docx_path('complex_field_with_split_fieldname.docx'))

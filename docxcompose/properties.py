@@ -1,3 +1,4 @@
+from babel.dates import format_datetime
 from copy import deepcopy
 from datetime import datetime
 from docx.opc.constants import CONTENT_TYPE as CT
@@ -96,6 +97,7 @@ class CustomProperties(object):
         self.doc = doc
         self.part = None
         self._element = None
+        self.language = self.get_doc_language()
 
         try:
             part = doc.part.package.part_related_by(RT.CUSTOM_PROPERTIES)
@@ -164,6 +166,23 @@ class CustomProperties(object):
             pid += 1
 
         self._update_part()
+
+    def get_doc_language(self):
+        """We actually should determine the correct language for each field.
+        Instead we simply determine the language from the first w:lang tag in
+        the document, and if None are found, from the w:lang tag in the default
+        style.
+        """
+        lang_tags = xpath(self.doc.element, ".//w:lang")
+        lang_tags.extend(xpath(self.doc.styles.element, ".//w:lang"))
+        # keep the first tag containing a setting for Latin languages
+        latin_lang_key = "{{{}}}val".format(NS["w"])
+        lang_tags = [tag for tag in lang_tags if latin_lang_key in tag.keys()]
+        if lang_tags:
+            language = lang_tags[0].attrib[latin_lang_key]
+            # babel does not support dashes in combined language codes
+            return language.replace("-", "_")
+        return None
 
     def nullify(self, key):
         """Delete key for non text-properties, set key to empty string for
@@ -298,13 +317,13 @@ class CustomProperties(object):
             value = available_docprops.get(docprop.name)
             if value is None:
                 continue
-            docprop.update(value)
+            docprop.update(value, language=self.language)
 
     def update(self, name, value):
         """Update all instances of a given doc-property in the document."""
         docprops = self.find_docprops_in_document(name)
         for docprop in docprops:
-            docprop.update(value)
+            docprop.update(value, language=self.language)
 
     def dissolve_fields(self, name):
         """Remove the property fields but keep their value."""
@@ -327,17 +346,19 @@ class FieldBase(object):
         if self.date_format:
             self.date_format = word_to_python_date_format(self.date_format)
         else:
-            self.date_format = '%x'
+            self.date_format = "short"
 
-    def _format_value(self, value):
+    def _format_value(self, value, language=None):
         if isinstance(value, bool):
             return u'Y' if value else u'N'
         elif isinstance(value, datetime):
-            return value.strftime(self.date_format)
+            if language is not None:
+                return format_datetime(value, self.date_format, locale=language)
+            return format_datetime(value, self.date_format)
         else:
             return text_type(value)
 
-    def update(self, value):
+    def update(self, value, language=None):
         """ Sets the value of the docproperty in the document
         """
         raise NotImplementedError()
@@ -370,10 +391,10 @@ class SimpleField(FieldBase):
     def _get_fieldname_string(self):
         return self.node.attrib[self.attr_name]
 
-    def update(self, value):
+    def update(self, value, language=None):
         text = xpath(self.node, './/w:t')
         if text:
-            text[0].text = self._format_value(value)
+            text[0].text = self._format_value(value, language=language)
 
     def replace_field_with_value(self):
         parent = self.node.getparent()
@@ -494,14 +515,14 @@ class ComplexField(FieldBase):
         runs.append(self.end_run)
         return runs
 
-    def update(self, value):
+    def update(self, value, language=None):
         runs_after_separate = self.get_runs_for_update()
 
         if runs_after_separate:
             first_w_r = runs_after_separate[0]
             text = xpath(first_w_r, u'.//w:t')
             if text:
-                text[0].text = self._format_value(value)
+                text[0].text = self._format_value(value, language=language)
             # remove any additional text-nodes inside the first run. we
             # update the first text-node only with the full cached
             # docproperty value. if for some reason the initial cached
@@ -541,7 +562,7 @@ class ComplexField(FieldBase):
             value_run = deepcopy(self.begin_run)
             value_run.remove(xpath(value_run, 'w:fldChar')[0])
             text = parse_xml('<w:t xmlns:w="{}"></w:t>'.format(NS['w']))
-            text.text = self._format_value(value)
+            text.text = self._format_value(value, language=language)
             value_run.append(text)
 
             # insert newly created nodes after the node containing the

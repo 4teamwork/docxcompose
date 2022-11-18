@@ -34,25 +34,11 @@ def xpath(element, xpath_str):
 # https://support.microsoft.com/en-us/office/format-field-results-baa61f5a-5636-4f11-ab4f-6c36ae43508c?ui=en-US&rs=en-US&ad=US#ID0EAABAAA=Date-Time_format_switch_(\@)
 date_format_map = (
     ('Y', 'y'),  # Upper or lower case Y are equivalent
-    ('yyyy', '%Y'),
-    ('yy', '%y'),
-    ('MMMM', '%B'),
-    ('MMM', '%b'),
-    ('MM', '%m'),
-    ('M', '%-%m'),  # We use '%-%m' instead of '%-m' to facilitate negative lookbehind
-    ('d', 'D'),  # Upper or lower case D are equivalent
-    ('DDDD', '%A'),
-    ('DDD', '%a'),
-    ('DD', '%d'),
-    ('D', '%-d'),
-    ('H', 'h'),  # Upper or lower case H are equivalent
-    ('hh', '%H'),
-    ('h', '%-H'),
-    ('(?<!%)mm', '%M'),
-    ('(?<!%)m', '%-M'),
-    ('%-%m', '%-m'),  # Now that we've done the negative lookbehind we can set month format correctly
-    ('ss', '%S'),
-    ('s', '%-S'),
+    ('D', 'd'),
+    ('dddd', 'EEEE'),
+    ('ddd', 'E'),
+    ('am/pm', 'AM/PM'),  # Upper or lower case are equivalent
+    ('AM/PM', 'a')
 )
 
 
