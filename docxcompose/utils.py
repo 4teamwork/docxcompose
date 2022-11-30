@@ -14,6 +14,8 @@ NS = {
     'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
     'wp': 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing',
     'dgm': 'http://schemas.openxmlformats.org/drawingml/2006/diagram',
+    'w14': "http://schemas.microsoft.com/office/word/2010/wordml",
+    'w15': 'http://schemas.microsoft.com/office/word/2012/wordml',
 }
 nsmap.update(NS)
 

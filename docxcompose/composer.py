@@ -29,6 +29,18 @@ PART_RELTYPES_WITH_STYLES = [
     RT.FOOTNOTES,
 ]
 
+COMMENTS = {
+    'reltype': RT.COMMENTS,
+    'partname': "/word/comments.xml",
+    'content_type': CT.WML_COMMENTS,
+    'template': 'comments.xml',
+}
+COMMENTS_EXTENDED = {
+    'reltype': 'http://schemas.microsoft.com/office/2011/relationships/commentsExtended',
+    'partname': "/word/commentsExtended.xml",
+    'content_type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.commentsExtended+xml',
+    'template': 'commentsExtended.xml',
+}
 
 class Composer(object):
 
@@ -50,6 +62,7 @@ class Composer(object):
     def append(self, doc, remove_property_fields=True):
         """Append the given document."""
         index = self.append_index()
+        self.get_comments_elements(doc)
         self.insert(index, doc, remove_property_fields=remove_property_fields)
 
     def insert(self, index, doc, remove_property_fields=True):
@@ -84,6 +97,7 @@ class Composer(object):
             self.add_diagrams(doc, element)
             self.add_shapes(doc, element)
             self.add_footnotes(doc, element)
+            self.add_comments(element)
             self.remove_header_and_footer_references(doc, element)
             index += 1
 
@@ -205,6 +219,110 @@ class Composer(object):
                 rel = doc.part.rels[rid]
                 new_rel = self.add_relationship(None, self.doc.part, rel)
                 blip.set('{%s}link' % NS['r'], new_rel.rId)
+    
+    def add_comments(self, element):
+        """Add comments from the given document used in the given element."""
+        # Comments are described by 4 files, this function support:
+        #     + comments.xml
+        #     + commentExtended.xml
+        #     - commentExtensible.xml
+        #     - commentsIds.xml
+        
+        if self.comments_elements is None:
+            return
+
+        comments_refs = element.findall('.//w:commentReference', NS)
+        if comments_refs is None:
+            return
+
+        comments_start_refs = element.findall('.//w:commentRangeStart', NS)
+        comments_end_refs = element.findall('.//w:commentRangeEnd', NS)
+
+        my_comment_part = self.comments_part(COMMENTS)
+        my_comments_ex_part = self.comments_part(COMMENTS_EXTENDED)
+
+        comments = parse_xml(my_comment_part.blob)
+        comments_ex = parse_xml(my_comments_ex_part.blob)
+        next_id = len(comments) + 1
+
+        comments_elements = self.comments_elements
+        comment_el = comments_elements['comment_el']
+        comments_ex_el = comments_elements['comments_ex_el']
+
+        for i in range(len(comments_refs)):
+            ref = comments_refs[i]
+            id_ = ref.get('{%s}id' % NS['w'])
+            comment = comment_el.find('.//w:comment[@w:id="%s"]' % id_, NS)
+
+            comments.append(comment)
+            comment.set('{%s}id' % NS['w'], str(next_id))
+            ref.set('{%s}id' % NS['w'], str(next_id))
+        
+            comments_start_refs[i].set('{%s}id' % NS['w'], str(next_id))
+            comments_end_refs[i].set('{%s}id' % NS['w'], str(next_id))
+
+            comment_paragraphs = comment.findall('.//w:p', NS)
+            for p in comment_paragraphs:
+                paraId_ = p.get('{%s}paraId' % NS['w14'])
+                nextParaId = "{0:08X}".format(int(paraId_, 16) + next_id)
+                # nextParaId = "{0:08X}".format(int(10**8 * random.random()))
+                p.set('{%s}paraId' % NS['w14'], nextParaId)
+
+                if paraId_ in comments_elements['paraId']:
+                    comment_ex = comments_ex_el.find(
+                        './/w15:commentEx[@w15:paraId="%s"]' % paraId_, NS)
+                    comment_ex.set('{%s}paraId' % NS['w15'], nextParaId)
+                    comments_ex.append(comment_ex)
+
+                if paraId_ in comments_elements['paraIdParent']:
+                    child_comments = comments_ex_el.findall(
+                        './/w15:commentEx[@w15:paraIdParent="%s"]' % paraId_, NS)
+                    for i in child_comments:
+                        i.set('{%s}paraIdParent' % NS['w15'], nextParaId)
+                        
+            next_id += 1
+
+        my_comment_part._blob = serialize_part_xml(comments)
+        my_comments_ex_part._blob = serialize_part_xml(comments_ex)
+ 
+    def get_comments_elements(self, doc):
+        dict = {}
+        try:
+            comments = doc.part.rels.part_with_reltype(COMMENTS['reltype'])
+            dict['comment_el'] = deepcopy(parse_xml(comments.blob))
+            comments_ex = doc.part.rels.part_with_reltype(COMMENTS_EXTENDED['reltype'])
+            comments_ex_el = deepcopy(parse_xml(comments_ex.blob))
+            dict['comments_ex_el'] = comments_ex_el
+
+            el = comments_ex_el.findall('.//w15:commentEx', NS)
+            dict['paraIdParent'] = list(
+                OrderedDict.fromkeys([e.get('{%s}paraIdParent' % NS['w15']) for e in el])
+            )
+            dict['paraId'] = list(
+                OrderedDict.fromkeys([e.get('{%s}paraId' % NS['w15']) for e in el])
+            )
+           
+            self.comments_elements = dict
+        except KeyError:
+            self.comments_elements = None
+        
+    def comments_part(self, comments):
+        """The comment part of the document."""
+        try:
+            reltype = comments['reltype']
+            comments_part = self.doc.part.rels.part_with_reltype(reltype)
+        except KeyError:
+            # Create a new empty comments part
+            partname = PackURI(comments['partname'])
+            content_type = comments['content_type']
+            xml_path = os.path.join(
+                os.path.dirname(__file__), 'templates', comments['template'])
+            with open(xml_path, 'rb') as f:
+                xml_bytes = f.read()
+            comments_part = Part(
+                partname, content_type, xml_bytes, self.doc.part.package)
+            self.doc.part.relate_to(comments_part, reltype)
+        return comments_part  
 
     def add_shapes(self, doc, element):
         shapes = xpath(element, './/v:shape/v:imagedata')
