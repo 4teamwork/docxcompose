@@ -17,3 +17,17 @@ def test_set_sdt_text_content():
     expected = FixtureDocument("content_controls.docx")
 
     assert updated == expected
+
+
+def test_set_sdt_multiline_text_content():
+    doc = Document(docx_path('content_controls_multiline_formatted.docx'))
+    sdt = StructuredDocumentTags(doc)
+    sdt.set_text('cc.plain_text', u'Line 1\nLine 2')
+    sdt.set_text('cc.plain_text_multiline', u'Line 1\nLine 2')
+    sdt.set_text('cc.plain_text_empty', u'Line 1\nLine 2')
+    sdt.set_text('cc.rich_text', u'Line 1\nLine 2')
+
+    updated = ComparableDocument(doc)
+    expected = FixtureDocument("content_controls_multiline_formatted.docx")
+
+    assert updated == expected

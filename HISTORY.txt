@@ -5,7 +5,7 @@ Changelog
 1.3.8 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Add support for updating multiline plain text Content Controls. [lgraf]
 
 
 1.3.7 (2022-11-18)
