@@ -31,3 +31,12 @@ def test_set_sdt_multiline_text_content():
     expected = FixtureDocument("content_controls_multiline_formatted.docx")
 
     assert updated == expected
+
+
+def test_get_sdt_multiline_text_content():
+    doc = FixtureDocument("content_controls_multiline_formatted.docx")
+    sdt = StructuredDocumentTags(doc.doc)
+
+    assert sdt.get_text('cc.plain_text') == 'Line 1 Line 2'
+    assert sdt.get_text('cc.plain_text_multiline') == 'Line 1\nLine 2'
+    assert sdt.get_text('cc.plain_text_empty') == 'Line 1 Line 2'

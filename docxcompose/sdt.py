@@ -111,6 +111,13 @@ class StructuredDocumentTags(object):
             # Ignore if it's not a plain text SDT
             if not xpath(tag, './w:sdtPr/w:text'):
                 continue
-            text_elements = xpath(tag, './w:sdtContent//w:r/w:t')
-            if text_elements:
-                return text_elements[0].text
+
+            tokens = []
+            text_and_brs = xpath(tag, './w:sdtContent//w:r/*[self::w:t or self::w:br]')
+            for el in text_and_brs:
+                if QName(el).localname == 't':
+                    tokens.append(el.text)
+                elif QName(el).localname == 'br':
+                    tokens.append('\n')
+
+            return ''.join(tokens)
