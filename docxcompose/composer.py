@@ -252,6 +252,10 @@ class Composer(object):
         for i in range(len(comments_refs)):
             ref = comments_refs[i]
             id_ = ref.get('{%s}id' % NS['w'])
+            #Todo Ideally add support for /word/_rels/comments.xml.rels
+            hyperlink = comment_el.findall('.//w:hyperlink[@r:id]' , NS)
+            for h in hyperlink:
+                h.attrib.pop('{%s}id' % NS['r'])
             comment = comment_el.find('.//w:comment[@w:id="%s"]' % id_, NS)
 
             comments.append(comment)
