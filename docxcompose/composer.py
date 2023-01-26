@@ -235,9 +235,6 @@ class Composer(object):
         if comments_refs is None:
             return
 
-        comments_start_refs = element.findall('.//w:commentRangeStart', NS)
-        comments_end_refs = element.findall('.//w:commentRangeEnd', NS)
-
         my_comment_part = self.comments_part(COMMENTS)
         my_comments_ex_part = self.comments_part(COMMENTS_EXTENDED)
 
@@ -261,9 +258,13 @@ class Composer(object):
             comments.append(comment)
             comment.set('{%s}id' % NS['w'], str(next_id))
             ref.set('{%s}id' % NS['w'], str(next_id))
-        
-            comments_start_refs[i].set('{%s}id' % NS['w'], str(next_id))
-            comments_end_refs[i].set('{%s}id' % NS['w'], str(next_id))
+            
+            comments_start_range = element.find('.//w:commentRangeStart[@w:id="%s"]' % id_, NS)
+            if comments_start_range is not None:
+                comments_start_range.set('{%s}id' % NS['w'], str(next_id))
+            comments_end_range = element.find('.//w:commentRangeEnd[@w:id="%s"]' % id_, NS)
+            if comments_end_range is not None:
+                comments_end_range.set('{%s}id' % NS['w'], str(next_id))
 
             comment_paragraphs = comment.findall('.//w:p', NS)
             for p in comment_paragraphs:
