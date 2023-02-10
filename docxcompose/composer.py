@@ -47,7 +47,11 @@ class Composer(object):
         self.anum_id_mapping = {}
         self._numbering_restarted = set()
 
-    def append(self, doc, remove_property_fields=True):
+    def append(self, doc, remove_property_fields=True, add_page_break_before=False):
+        # add page break before append doc if needed
+        if add_page_break_before:
+            self.doc.add_page_break()
+
         """Append the given document."""
         index = self.append_index()
         self.insert(index, doc, remove_property_fields=remove_property_fields)

@@ -18,6 +18,8 @@ def setup_parser():
     parser.add_argument('-o', '--output-document', dest='ouput_document',
                         default='composed.docx',
                         help='path to the output file', metavar='file')
+    parser.add_argument('-pb','--pagebreak',help='add a page break before each document appended to master',
+                        action='store_true')
     return parser
 
 
@@ -39,7 +41,7 @@ def parse_args(parser, args):
 def compose_files(parser, parsed_args):
     composer = Composer(Document(parsed_args.master))
     for slave_path in parsed_args.files:
-        composer.append(Document(slave_path))
+        composer.append(Document(slave_path), True, parsed_args.pagebreak)
 
     composer.save(parsed_args.ouput_document)
     parser.exit(message='successfully composed file at {}\n'.format(
