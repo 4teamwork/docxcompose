@@ -18,7 +18,6 @@ setup(
     # Get more from https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",
         "License :: OSI Approved :: MIT License",
@@ -31,10 +30,10 @@ setup(
     packages=find_packages(exclude=['ez_setup']),
     include_package_data=True,
     zip_safe=True,
+    python_requires=">=3.9",
     install_requires=[
         'lxml',
         'python-docx >= 0.8.8',
-        'setuptools',
         'six',
         'babel',
     ],
