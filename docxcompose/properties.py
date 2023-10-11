@@ -6,7 +6,7 @@ from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from docx.opc.oxml import serialize_part_xml
 from docx.opc.packuri import PackURI
 from docx.opc.part import Part
-from docx.oxml import parse_xml
+from docx.oxml.parser import parse_xml
 from docx.oxml.coreprops import CT_CoreProperties
 from docxcompose.utils import NS
 from docxcompose.utils import word_to_python_date_format
