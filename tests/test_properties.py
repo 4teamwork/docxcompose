@@ -1,7 +1,7 @@
 from datetime import datetime
 from docx import Document
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
-from docx.oxml import parse_xml
+from docx.oxml.parser import parse_xml
 from docxcompose.properties import ComplexField
 from docxcompose.properties import CUSTOM_PROPERTY_TYPES
 from docxcompose.properties import CustomProperties

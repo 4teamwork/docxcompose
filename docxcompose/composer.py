@@ -5,7 +5,7 @@ from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from docx.opc.oxml import serialize_part_xml
 from docx.opc.packuri import PackURI
 from docx.opc.part import Part
-from docx.oxml import parse_xml
+from docx.oxml.parser import parse_xml
 from docx.oxml.section import CT_SectPr
 from docx.parts.numbering import NumberingPart
 from docxcompose.image import ImageWrapper
