@@ -27,6 +27,7 @@ REFERENCED_PARTS_IGNORED_RELTYPES = set([
 
 PART_RELTYPES_WITH_STYLES = [
     RT.FOOTNOTES,
+    RT.ENDNOTES
 ]
 
 
@@ -84,6 +85,7 @@ class Composer(object):
             self.add_diagrams(doc, element)
             self.add_shapes(doc, element)
             self.add_footnotes(doc, element)
+            self.add_endnotes(doc, element)
             self.remove_header_and_footer_references(doc, element)
             index += 1
 
@@ -701,3 +703,47 @@ class Composer(object):
             first_sect_pr.append(pg_num_type)
 
         self.first_section_properties_added = True
+
+    def add_endnotes(self, doc, element):
+        """Add endnotes from the given document used in the given element."""
+        endnotes_refs = element.findall('.//w:endnoteReference', NS)
+
+        if not endnotes_refs:
+            return
+
+        endnote_part = doc.part.rels.part_with_reltype(RT.ENDNOTES)
+
+        my_endnote_part = self.endnote_part()
+
+        endnotes = parse_xml(my_endnote_part.blob)
+        next_id = len(endnotes) + 1
+
+        for ref in endnotes_refs:
+            id_ = ref.get('{%s}id' % NS['w'])
+            element = parse_xml(endnote_part.blob)
+            endnote = deepcopy(element.find('.//w:endnote[@w:id="%s"]' % id_, NS))
+            endnotes.append(endnote)
+            endnote.set('{%s}id' % NS['w'], str(next_id))
+            ref.set('{%s}id' % NS['w'], str(next_id))
+            next_id += 1
+
+        self.add_referenced_parts(endnote_part, my_endnote_part, element)
+
+        my_endnote_part._blob = serialize_part_xml(endnotes)
+
+    def endnote_part(self):
+        """The endnote part of the document."""
+        try:
+            endnote_part = self.doc.part.rels.part_with_reltype(RT.ENDNOTES)
+        except KeyError:
+            # Create a new empty footnotes part
+            partname = PackURI('/word/endnotes.xml')
+            content_type = CT.WML_ENDNOTES
+            xml_path = os.path.join(
+                os.path.dirname(__file__), 'templates', 'endnotes.xml')
+            with open(xml_path, 'rb') as f:
+                xml_bytes = f.read()
+            endnote_part = Part(
+                partname, content_type, xml_bytes, self.doc.part.package)
+            self.doc.part.relate_to(endnote_part, RT.ENDNOTES)
+        return endnote_part
