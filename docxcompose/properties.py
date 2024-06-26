@@ -13,8 +13,6 @@ from docxcompose.utils import word_to_python_date_format
 from docxcompose.utils import xpath
 from lxml.etree import FunctionNamespace
 from lxml.etree import QName
-from six import binary_type
-from six import text_type
 import pkg_resources
 import re
 
@@ -36,17 +34,17 @@ def value2vt(value):
         el.text = 'true' if value else 'false'
     elif isinstance(value, int):
         el = parse_xml(CUSTOM_PROPERTY_TYPES['int'])
-        el.text = text_type(value)
+        el.text = str(value)
     elif isinstance(value, float):
         el = parse_xml(CUSTOM_PROPERTY_TYPES['float'])
-        el.text = text_type(value)
+        el.text = str(value)
     elif isinstance(value, datetime):
         el = parse_xml(CUSTOM_PROPERTY_TYPES['datetime'])
         el.text = value.strftime('%Y-%m-%dT%H:%M:%SZ')
-    elif isinstance(value, text_type):
+    elif isinstance(value, str):
         el = parse_xml(CUSTOM_PROPERTY_TYPES['text'])
         el.text = value
-    elif isinstance(value, binary_type):
+    elif isinstance(value, bytes):
         value = value.decode('utf-8')
         el = parse_xml(CUSTOM_PROPERTY_TYPES['text'])
         el.text = value
@@ -162,7 +160,7 @@ class CustomProperties(object):
         # Renumber pids
         pid = MIN_PID
         for prop in self._element:
-            prop.set('pid', text_type(pid))
+            prop.set('pid', str(pid))
             pid += 1
 
         self._update_part()
@@ -226,7 +224,7 @@ class CustomProperties(object):
         prop = parse_xml('<cp:property xmlns:cp="{}"/>'.format(NS['cp']))
         prop.set('fmtid', CUSTOM_PROPERTY_FMTID)
         prop.set('name', name)
-        prop.set('pid', text_type(pid))
+        prop.set('pid', str(pid))
         value_el = value2vt(value)
         prop.append(value_el)
         self._element.append(prop)
@@ -356,7 +354,7 @@ class FieldBase(object):
                 return format_datetime(value, self.date_format, locale=language)
             return format_datetime(value, self.date_format)
         else:
-            return text_type(value)
+            return str(value)
 
     def update(self, value, language=None):
         """ Sets the value of the docproperty in the document
