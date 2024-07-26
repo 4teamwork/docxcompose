@@ -369,6 +369,8 @@ class Composer(object):
             num_element.numId = next_num_id
 
             self.num_id_mapping[num_id] = next_num_id
+            # Update next_num_id for the next loop
+            next_num_id += 1
 
             anum_id = num_element.xpath('//w:abstractNumId')[0]
             if anum_id.val not in self.anum_id_mapping:
@@ -382,6 +384,8 @@ class Composer(object):
                 anum_id.val = next_anum_id
                 # anum_element.abstractNumId = next_anum_id
                 anum_element.set('{%s}abstractNumId' % NS['w'], str(next_anum_id))
+                # Update next_anum_id for the next loop
+                next_anum_id += 1
 
                 # Make sure we have a unique nsid so numberings restart properly
                 nsid = anum_element.find('.//w:nsid', NS)
