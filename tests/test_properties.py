@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from docx import Document
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from docx.oxml import parse_xml
@@ -763,12 +763,12 @@ def test_get_doc_properties():
     assert props['Text Property'] == 'Foo Bar'
     assert props['Number Property'] == 123
     assert props['Boolean Property'] is True
-    assert props['Date Property'] == datetime(2019, 6, 11, 10, 0)
+    assert props['Date Property'] == datetime(2019, 6, 11, 10, 0, tzinfo=timezone.utc)
 
     assert props.get('Text Property') == 'Foo Bar'
     assert props.get('Number Property') == 123
     assert props.get('Boolean Property') is True
-    assert props.get('Date Property') == datetime(2019, 6, 11, 10, 0)
+    assert props.get('Date Property') == datetime(2019, 6, 11, 10, 0, tzinfo=timezone.utc)
 
 
 def test_get_doc_property_is_case_insensitive():
@@ -793,7 +793,7 @@ def test_add_doc_properties():
     assert props.get('My Number Property') == 123
 
     props.add('My Date Property', datetime(2019, 10, 23, 15, 44, 50))
-    assert props.get('My Date Property') == datetime(2019, 10, 23, 15, 44, 50)
+    assert props.get('My Date Property') == datetime(2019, 10, 23, 15, 44, 50, tzinfo=timezone.utc)
 
 
 def test_add_utf8_property():
@@ -818,7 +818,7 @@ def test_set_doc_properties():
     assert props['Number Property'] == 456
 
     props['Date Property'] = datetime(2019, 10, 20, 12, 0)
-    assert props['Date Property'] == datetime(2019, 10, 20, 12, 0)
+    assert props['Date Property'] == datetime(2019, 10, 20, 12, 0, tzinfo=timezone.utc)
 
 
 def test_set_doc_property_is_case_insensitive():
@@ -913,7 +913,7 @@ def test_doc_properties_values():
     props = CustomProperties(document)
 
     assert props.values() == [
-        'Foo Bar', 123, True, datetime(2019, 6, 11, 10, 0), 1.1]
+        'Foo Bar', 123, True, datetime(2019, 6, 11, 10, 0, tzinfo=timezone.utc), 1.1]
 
 
 def test_doc_properties_items():
@@ -924,7 +924,7 @@ def test_doc_properties_items():
         ('Text Property', 'Foo Bar'),
         ('Number Property', 123),
         ('Boolean Property', True),
-        ('Date Property', datetime(2019, 6, 11, 10, 0)),
+        ('Date Property', datetime(2019, 6, 11, 10, 0, tzinfo=timezone.utc)),
         ('Float Property', 1.1),
     ]
 
@@ -933,7 +933,7 @@ def test_vt2value_value2vt_roundtrip():
     assert vt2value(value2vt(42)) == 42
     assert vt2value(value2vt(True)) is True
     assert vt2value(value2vt(1.1)) == pytest.approx(1.1)
-    dt = datetime(2019, 6, 11, 10, 0)
+    dt = datetime(2019, 6, 11, 10, 0, tzinfo=timezone.utc)
     assert vt2value(value2vt(dt)) == dt
     assert vt2value(value2vt(u'foo')) == u'foo'
     assert vt2value(value2vt(u'')) == u''
