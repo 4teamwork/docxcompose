@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "docxcompose_tes"
+authors = [{ name="Telengsol", email="devops+test-pypi@telengsol.com" }]
+description = "Python library for concatenating/appending Microsoft Word (.docx) files."
+readme = "README.rst"
+license = {text = "MIT"}
+dependencies = []
+
+# Only version is dynamic
+dynamic = ["version"]
+
+# All other fields remain static
+keywords = ["Python", "DOCX", "Word", "OOXML"]
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: MIT License"
+]
+
+[project.scripts]
+docxcompose = "docxcompose.command:main"
+
+[project.optional-dependencies]
+test = ["pytest"]
+tests = ["pytest"]
+
+[tool.setuptools_scm]
+version_scheme = "guess-next-dev"
+local_scheme = "node-and-date"
+
