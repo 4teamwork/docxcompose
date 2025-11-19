@@ -1,6 +1,13 @@
 Changelog
 =========
 
+1.4.1.post0+tes
+------------------
+
+- Migrated build system to PEP 517/621.
+- Added pyproject.toml with modern metadata.
+- Declared dynamic readme using setuptools to combine README.rst and HISTORY.txt.
+- Removed legacy setup.py-based build path to avoid deprecation warnings.
 
 1.4.1 (unreleased)
 ------------------

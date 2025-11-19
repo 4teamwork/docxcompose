@@ -4,11 +4,17 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "docxcompose_tes"
-authors = [{ name="Telengsol", email="devops+test-pypi@telengsol.com" }]
 description = "Python library for concatenating/appending Microsoft Word (.docx) files."
 readme = "README.rst"
 license = {text = "MIT"}
-dependencies = []
+requires-python = ">=3.13"
+dependencies = [
+    'lxml',
+    'python-docx >= 1.2.0',
+    'six',
+    'babel',
+]
+
 
 # Only version is dynamic
 dynamic = ["version"]
@@ -33,3 +39,6 @@ tests = ["pytest"]
 version_scheme = "guess-next-dev"
 local_scheme = "node-and-date"
 
+# declare readme dynamically via setuptools
+[tool.setuptools.dynamic]
+readme = { file = ["README.rst", "HISTORY.txt"], content-type = "text/x-rst" }
