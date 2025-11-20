@@ -1,7 +1,12 @@
 Changelog
 =========
 
-1.4.1.post0+tes
+1.4.1.post1
+------------------
+
+- Update tagging trigger for GitHub workflow.
+
+1.4.1.post0
 ------------------
 
 - Migrated build system to PEP 517/621.
