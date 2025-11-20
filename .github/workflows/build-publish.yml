@@ -4,7 +4,7 @@ name: Publish Python Package
 on:
   push:
     tags:
-      - "v*"   # Runs only when you push a tag like v1.0.0
+      - "*"   # Tag will be used for version via setuptools_scm, should match version in HISTORY.txt
 
 jobs:
   build-and-publish:
@@ -22,10 +22,21 @@ jobs:
         with:
           python-version: "3.13"
 
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y libxml2-dev libxslt-dev
+
       - name: Install build tools
         run: |
           python -m pip install --upgrade pip
           pip install build twine
+
+      - name: Install test dependencies
+        run: |
+          pip install -e .
+          pip install -r requirements-test.txt
+
+      - name: Run tests
+        run: pytest --maxfail=1 --disable-warnings -q
 
       - name: Build package
         run: python -m build
@@ -33,5 +44,11 @@ jobs:
       - name: Publish to PyPI
         env:
           TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
-        run: twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: twine upload dist/*
+
+#      - name: Publish to Test PyPI
+#        env:
+#          TWINE_USERNAME: __token__
+#          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
+#        run: twine upload --repository-url https://test.pypi.org/legacy/ dist/*
