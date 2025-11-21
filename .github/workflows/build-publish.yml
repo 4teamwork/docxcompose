@@ -32,11 +32,10 @@ jobs:
 
       - name: Install test dependencies
         run: |
-          pip install -e .
-          pip install -r requirements-test.txt
+          pip install .[test]
 
       - name: Run tests
-        run: pytest --maxfail=1 --disable-warnings -q
+        run: pytest
 
       - name: Build package
         run: python -m build
