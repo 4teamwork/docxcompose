@@ -4,7 +4,7 @@
 
 Bug fixes:
 
-- Use not fixed dependecy versions. (`master <https://4teamwork.atlassian.net/browse/master>`_)
+- Use not fixed dependecy versions. [jch]
 
 
 2.0.0 (2026-02-10)
