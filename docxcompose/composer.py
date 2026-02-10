@@ -369,8 +369,10 @@ class Composer(object):
             return
 
         next_num_id, next_anum_id = self._next_numbering_ids()
-
-        src_numbering_part = doc.part.numbering_part
+        try:
+            src_numbering_part = doc.part.numbering_part
+        except NotImplementedError:  # python-docx NumberingPart.new() NotImplementedError
+            src_numbering_part = self.numbering_part()
 
         for num_id in num_ids:
             if num_id in self.num_id_mapping:
