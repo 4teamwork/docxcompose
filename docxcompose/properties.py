@@ -1,4 +1,5 @@
 from babel.dates import format_datetime
+import importlib.resources as importlib_resources
 from copy import deepcopy
 from datetime import datetime
 from docx.opc.constants import CONTENT_TYPE as CT
@@ -15,7 +16,6 @@ from lxml.etree import FunctionNamespace
 from lxml.etree import QName
 from six import binary_type
 from six import text_type
-import pkg_resources
 import re
 
 
@@ -108,8 +108,11 @@ class CustomProperties(object):
             self._element = parse_xml(part.blob)
 
     def _part_template(self):
-        return pkg_resources.resource_string(
-            'docxcompose', 'templates/custom.xml')
+        return (
+            importlib_resources.files("docxcompose")
+            .joinpath("templates/custom.xml")
+            .read_bytes()
+        )
 
     def _update_part(self):
         if self.part is None:
