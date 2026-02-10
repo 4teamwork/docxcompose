@@ -1,0 +1,33 @@
+name: Linting
+
+on:
+  - push
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.13
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: 2.1
+      - name: Install dependencies
+        run: poetry install
+      - name: isort
+        run: poetry run isort --check-only --quiet --settings pyproject.toml .
+      - name: flake8
+        run: poetry run flake8
+      - name: black
+        run: poetry run black --check --config pyproject.toml .
+      - name: tests
+        run: poetry run pytest
