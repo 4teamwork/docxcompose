@@ -2,12 +2,6 @@ Changelog
 =========
 
 
-1.4.1 (unreleased)
-------------------
-
-- Nothing changed yet.
-
-
 1.4.0 (2022-12-14)
 ------------------
 
@@ -74,10 +68,8 @@ Changelog
 1.1.2 (2020-06-11)
 ------------------
 
-- Handle embedded images that also have an external reference.
-  [buchi]
-- Fix renumbering of non-visual image and drawing properties.
-  [buchi]
+- Handle embedded images that also have an external reference. [buchi]
+- Fix renumbering of non-visual image and drawing properties. [buchi]
 
 
 1.1.1 (2020-05-04)
@@ -108,19 +100,15 @@ Changelog
 1.0.0 (2019-06-13)
 ------------------
 
-- Change license from GPL to MIT.
-  [buchi]
+- Change license from GPL to MIT. [buchi]
 
-- Add support for adding, setting and deleting of doc properties.
-  [buchi]
+- Add support for adding, setting and deleting of doc properties. [buchi]
 
 
 1.0.0a17 (2019-04-25)
 ---------------------
 
-- Add functionality to get and set content of plain text content controls
-  (structured document tags).
-  [buchi]
+- Add functionality to get and set content of plain text content controls (structured document tags). [buchi]
 
 
 1.0.0a16 (2019-01-15)
@@ -139,150 +127,103 @@ Changelog
 1.0.0a14 (2018-12-04)
 ---------------------
 
-- Implement generic handling of referenced parts. Among other, this adds
-  support for embedded Excel charts.
-  [buchi]
-
-- Handle embedded SVGs.
-  [buchi]
-
-- Add styles from other parts, e.g. footnotes.
-  [buchi]
+- Implement generic handling of referenced parts. Among other, this adds support for embedded Excel charts. [buchi]
+- Handle embedded SVGs. [buchi]
+- Add styles from other parts, e.g. footnotes. [buchi]
 
 
 1.0.0a13 (2018-11-05)
 ---------------------
 
-- Fix list-styles being set incorrectly when restarting numberings.
-  [deiferni]
+- Fix list-styles being set incorrectly when restarting numberings. [deiferni]
 
 
 1.0.0a12 (2018-10-30)
 ---------------------
 
-- Fix setting section type for appended documents with only one section.
-  [deiferni]
+- Fix setting section type for appended documents with only one section. [deiferni]
 
 
 1.0.0a11 (2018-07-30)
 ---------------------
 
-- Fix handling of section type.
-  [buchi]
-
-- Fix an issue where the listing style of the first element was different.
-  [deiferni]
-
-- Fix issue when restarting intermittent numbering.
-  [deiferni]
+- Fix handling of section type. [buchi]
+- Fix an issue where the listing style of the first element was different. [deiferni]
+- Fix issue when restarting intermittent numbering. [deiferni]
 
 
 1.0.0a10 (2018-07-18)
 ---------------------
 
-- Add console script command to compose two or more word files.
-  [deiferni]
+- Add console script command to compose two or more word files. [deiferni]
 
 
 1.0.0a9 (2018-05-01)
 --------------------
 
-- Fix error in mapping of num_ids introduced in 1.0.0.a7.
-  [buchi]
-
-- Do not fail when numbering zero is referenced.
-  [deiferni]
+- Fix error in mapping of num_ids introduced in 1.0.0.a7. [buchi]
+- Do not fail when numbering zero is referenced. [deiferni]
 
 
 1.0.0a8 (2018-04-26)
 --------------------
 
-- Only attempt to set the nsid when it is available.
-  [deiferni]
+- Only attempt to set the nsid when it is available. [deiferni]
 
 
 1.0.0a7 (2018-04-20)
 --------------------
 
-- Fix handling of images in WordprocessingGroups (<wpg:wpg>).
-  [buchi]
-
-- Fix handling of shapes in shape groups (<v:group>).
-  [buchi]
-
-- Fix handling of numberings, avoid inserting multiple numbering properties.
-  [buchi]
-
-- Fix renumbering of bookmarks.
-  [buchi]
-
-- Renumber ids of drawing object properties (<wp:docPr>).
-  [buchi]
+- Fix handling of images in WordprocessingGroups (<wpg:wpg>). [buchi]
+- Fix handling of shapes in shape groups (<v:group>). [buchi]
+- Fix handling of numberings, avoid inserting multiple numbering properties. [buchi]
+- Fix renumbering of bookmarks. [buchi]
+- Renumber ids of drawing object properties (<wp:docPr>). [buchi]
 
 
 1.0.0a6 (2018-02-20)
 --------------------
 
-- Do not restart numbering of bullets.
-  [buchi]
+- Do not restart numbering of bullets. [buchi]
 
 
 1.0.0a5 (2018-01-11)
 --------------------
 
-- Renumber bookmarks to avoid duplicate ids.
-  [buchi]
-
-- Add support for shapes.
-  [buchi]
+- Renumber bookmarks to avoid duplicate ids. [buchi]
+- Add support for shapes. [buchi]
 
 
 1.0.0a4 (2017-12-27)
 --------------------
 
-- Fix handling of styles when composing documents with different languages.
-  [buchi]
-
-- Also add numberings referenced in styles.
-  [buchi]
-
-- Avoid having multiple <w:abstractNum> elements for the same style.
-  [buchi]
-
-- Restart first numbering of inserted documents
-  [buchi]
-
-- Add support for anchored images.
-  [buchi]
-
-- Handle referenced style ids that are not defined in styles.xml
-  [buchi]
-
-- Remove header and footer references in paragraph properties.
-  [buchi]
+- Fix handling of styles when composing documents with different languages. [buchi]
+- Also add numberings referenced in styles. [buchi]
+- Avoid having multiple <w:abstractNum> elements for the same style. [buchi]
+- Restart first numbering of inserted documents [buchi]
+- Add support for anchored images. [buchi]
+- Handle referenced style ids that are not defined in styles.xml [buchi]
+- Remove header and footer references in paragraph properties. [buchi]
 
 
 1.0.0a3 (2017-11-22)
 --------------------
 
-- Make removal of property fields optional.
-  [buchi]
+- Make removal of property fields optional. [buchi] 
 
 
 1.0.0a2 (2017-11-06)
---------------------
+---------------------
 
-- Fix handling of footnotes containing hyperlinks.
-  [buchi]
-
+- Fix handling of footnotes containing hyperlinks. [buchi]
 - Add functionality to deal with custom document properties. Properties can be
   updated and fields containing properties can be removed. When appending or
-  inserting documents their custom document properties get removed automatically.
-  [buchi]
+  inserting documents their custom document properties get removed automatically. [buchi]
 
 
 1.0.0a1 (2017-09-13)
---------------------
+---------------------
 
-- Initial release
-  [buchi]
+New features:
+
+- Initial release [buchi]
