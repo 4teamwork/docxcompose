@@ -1,0 +1,61 @@
+[tool.poetry]
+name = "docxcompose"
+version = "2.0.0"
+description = "Compose .docx documents"
+authors = ["4teamwork AG"]
+readme = "README.rst"
+packages = [{include = "docxcompose"}]
+
+[tool.poetry.dependencies]
+babel = "2.18.0"
+lxml = "6.0.2"
+python = ">=3.12, <4"
+python-docx = "1.2.0"
+six = "1.17.0"
+
+[tool.poetry.group.dev.dependencies]
+black = "^25.1.0"
+flake8 = "7.3.0"
+isort = "^6.0.1"
+pytest = "9.0.2"
+towncrier = "^25.8.0"
+zest-releaser = "^9.6.2"
+zestreleaser-towncrier = "^1.3.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+force_alphabetical_sort_within_sections = true
+force_single_line = true
+from_first = false
+line_length = 200
+known_first_party = "docxcompose"
+lines_after_imports = 2
+
+[tool.pytest.ini_options]
+python_files = ["test_*.py"]
+testpaths = "tests"
+
+[tool.towncrier]
+package = "docxcompose"
+directory = "changes"
+template = "towncrier.md"
+filename = "CHANGELOG.md"
+underlines = ["-", ""]
+
+[[tool.towncrier.type]]
+directory = "feature"
+name = "New features:"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "bugfix"
+name = "Bug fixes:"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "other"
+name = "Other changes:"
+showcontent = true

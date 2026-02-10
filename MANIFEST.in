@@ -1,6 +1,2 @@
-graft docxcompose
-prune tests
-include *.rst
-include *.txt
-exclude .gitignore
-global-exclude *.pyc
+# We don't release this package. This dummy MANIFEST.in stops zest.releaser
+# from complaining.

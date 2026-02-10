@@ -34,11 +34,11 @@ line, e.g.:
 Installation for development
 ----------------------------
 
-To install docxcompose for development, clone the repository and using a python with setuptools (for example a fresh virtualenv), install it using pip:
+To install docxcompose for development, clone the repository and using a python with poetry:
 
 .. code:: sh
 
-    $ pip install -e .[tests]
+    $ poetry install
 
 Tests can then be run with ``pytest``.
 

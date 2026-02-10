@@ -1,15 +1,19 @@
-from docxcompose import command
-from utils import docx_path
 import pytest
+from utils import docx_path
+
+from docxcompose import command
 
 
 def test_command_creates_composed_docx_file_at_output_path(tmpdir):
-    output_path = tmpdir.join('outfile.docx')
+    output_path = tmpdir.join("outfile.docx")
     assert not output_path.exists()
 
-    arguments = [docx_path('master.docx'),
-                 docx_path('table.docx'),
-                 '--output-document', output_path.strpath]
+    arguments = [
+        docx_path("master.docx"),
+        docx_path("table.docx"),
+        "--output-document",
+        output_path.strpath,
+    ]
     with pytest.raises(SystemExit) as exc_info:
         command.main(arguments)
 
