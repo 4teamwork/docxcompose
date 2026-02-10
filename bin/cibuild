@@ -1,6 +1,0 @@
-#!/usr/bin/env sh
-set -euo pipefail
-
-tox
-
-exit $?

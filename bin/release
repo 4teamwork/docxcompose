@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+
+set -euo pipefail
+
+git pull
+poetry run fullrelease
+poetry publish --build
