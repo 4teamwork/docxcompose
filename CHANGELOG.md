@@ -1,4 +1,12 @@
 
+2.0.1 (2026-02-10)
+------------------
+
+Bug fixes:
+
+- Use not fixed dependecy versions. (`master <https://4teamwork.atlassian.net/browse/master>`_)
+
+
 2.0.0 (2026-02-10)
 ------------------
 
