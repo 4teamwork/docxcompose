@@ -1,3 +1,17 @@
+
+2.0.0 (2026-02-10)
+------------------
+
+Bug fixes:
+
+- Fix deprecated pkg_resources after it was removed from setuptools. [jch]
+
+
+Other changes:
+
+- Use poetry for dependecy management and towncrier and zest.releaser for release managment. [jch]
+
+
 Changelog
 =========
 
