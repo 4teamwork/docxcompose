@@ -1,23 +1,27 @@
-from docx import Document
-from docxcompose.composer import Composer
-from operator import attrgetter
 import os.path
+from operator import attrgetter
+
+from docx import Document
+
+from docxcompose.composer import Composer
 from docxcompose.utils import xpath
 
 
-XPATH_CACHED_DOCPROPERTY_VALUES = 'w:r[preceding-sibling::w:r/w:fldChar/@w:fldCharType="separate"]/w:t'
+XPATH_CACHED_DOCPROPERTY_VALUES = (
+    'w:r[preceding-sibling::w:r/w:fldChar/@w:fldCharType="separate"]/w:t'
+)
 
 
 def docx_path(filename):
-    return os.path.join(os.path.dirname(__file__), 'docs', filename)
+    return os.path.join(os.path.dirname(__file__), "docs", filename)
 
 
 def simple_field_expression(name):
-    return u'.//w:fldSimple[contains(@w:instr, \'DOCPROPERTY "{}"\')]//w:t'.format(name)
+    return ".//w:fldSimple[contains(@w:instr, 'DOCPROPERTY \"{}\"')]//w:t".format(name)
 
 
 def complex_field_expression(name):
-    return u'.//w:instrText[contains(.,\'DOCPROPERTY "{}"\')]'.format(name)
+    return ".//w:instrText[contains(.,'DOCPROPERTY \"{}\"')]".format(name)
 
 
 def cached_complex_field_values(element):
@@ -27,17 +31,17 @@ def cached_complex_field_values(element):
 
 def assert_simple_field_value(expected, element, name):
     prop_elements = xpath(element, simple_field_expression(name))
-    assert len(prop_elements) == 1, u'Could not find simple field "{}"'.format(name)
+    assert len(prop_elements) == 1, 'Could not find simple field "{}"'.format(name)
     actual = prop_elements[0].text
-    assert expected == actual, u'{} == {}'.format(expected, actual)
+    assert expected == actual, "{} == {}".format(expected, actual)
 
 
 def assert_complex_field_value(expected, element, name):
     prop_elements = xpath(element, complex_field_expression(name))
-    assert len(prop_elements) == 1, u'Could not find complex field "{}"'.format(name)
+    assert len(prop_elements) == 1, 'Could not find complex field "{}"'.format(name)
     parent_paragraph = prop_elements[0].getparent().getparent()
-    actual = u''.join(cached_complex_field_values(parent_paragraph))
-    assert expected == actual, u'{} == {}'.format(expected, actual)
+    actual = "".join(cached_complex_field_values(parent_paragraph))
+    assert expected == actual, "{} == {}".format(expected, actual)
 
 
 class ComparableDocument(object):
@@ -53,8 +57,7 @@ class ComparableDocument(object):
             self.partnames = []
             return
 
-        self.parts = sorted(
-            self.doc.part.package.parts, key=attrgetter('partname'))
+        self.parts = sorted(self.doc.part.package.parts, key=attrgetter("partname"))
         self.partnames = sorted(p.partname for p in self.parts)
 
     def __eq__(self, other):
@@ -84,7 +87,7 @@ class FixtureDocument(ComparableDocument):
     def __init__(self, composed_filename):
         self.composed_filename = composed_filename
 
-        path = docx_path(os.path.join('composed_fixture', composed_filename))
+        path = docx_path(os.path.join("composed_fixture", composed_filename))
         doc = Document(path) if os.path.isfile(path) else None
 
         super(FixtureDocument, self).__init__(doc)
@@ -98,6 +101,7 @@ class ComposedDocument(ComparableDocument):
     document from the fixture and the assertion failed.
 
     """
+
     def __init__(self, master_filename, filename, *filenames):
         composer = Composer(Document(docx_path(master_filename)))
         for filename in (filename,) + filenames:
@@ -111,6 +115,5 @@ class ComposedDocument(ComparableDocument):
 
         """
         if isinstance(other, FixtureDocument):
-            path = docx_path(
-                os.path.join('composed_debug', other.composed_filename))
+            path = docx_path(os.path.join("composed_debug", other.composed_filename))
             self.doc.save(path)
