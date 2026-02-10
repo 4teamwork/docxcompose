@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "docxcompose"
-version = "2.0.0"
+version = "2.0.1"
 description = "Compose .docx documents"
 authors = ["4teamwork AG"]
 readme = "README.rst"
