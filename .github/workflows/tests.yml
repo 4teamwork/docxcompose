@@ -22,7 +22,7 @@ jobs:
         with:
           poetry-version: 2.1
       - name: Install dependencies
-        run: poetry install
+        run: poetry install -E dev
       - name: isort
         run: poetry run isort --check-only --quiet --settings pyproject.toml .
       - name: flake8
