@@ -5,7 +5,7 @@ Changelog
 1.4.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Remove dependency on pkg_resources from setuptools. [buchi]
 
 
 1.4.0 (2022-12-14)

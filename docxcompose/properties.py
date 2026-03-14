@@ -8,6 +8,7 @@ from docx.opc.packuri import PackURI
 from docx.opc.part import Part
 from docx.oxml import parse_xml
 from docx.oxml.coreprops import CT_CoreProperties
+from docxcompose.utils import load_template
 from docxcompose.utils import NS
 from docxcompose.utils import word_to_python_date_format
 from docxcompose.utils import xpath
@@ -15,7 +16,6 @@ from lxml.etree import FunctionNamespace
 from lxml.etree import QName
 from six import binary_type
 from six import text_type
-import pkg_resources
 import re
 
 
@@ -108,8 +108,7 @@ class CustomProperties(object):
             self._element = parse_xml(part.blob)
 
     def _part_template(self):
-        return pkg_resources.resource_string(
-            'docxcompose', 'templates/custom.xml')
+        return load_template('custom.xml')
 
     def _update_part(self):
         if self.part is None:

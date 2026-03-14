@@ -34,7 +34,6 @@ setup(
     install_requires=[
         'lxml',
         'python-docx >= 0.8.8',
-        'setuptools',
         'six',
         'babel',
     ],

@@ -10,9 +10,9 @@ from docx.oxml.section import CT_SectPr
 from docx.parts.numbering import NumberingPart
 from docxcompose.image import ImageWrapper
 from docxcompose.properties import CustomProperties
+from docxcompose.utils import load_template
 from docxcompose.utils import NS
 from docxcompose.utils import xpath
-import os.path
 import random
 import re
 
@@ -255,12 +255,9 @@ class Composer(object):
             # Create a new empty footnotes part
             partname = PackURI('/word/footnotes.xml')
             content_type = CT.WML_FOOTNOTES
-            xml_path = os.path.join(
-                os.path.dirname(__file__), 'templates', 'footnotes.xml')
-            with open(xml_path, 'rb') as f:
-                xml_bytes = f.read()
             footnote_part = Part(
-                partname, content_type, xml_bytes, self.doc.part.package)
+                partname, content_type, load_template('footnotes.xml'),
+                self.doc.part.package)
             self.doc.part.relate_to(footnote_part, RT.FOOTNOTES)
         return footnote_part
 
@@ -461,11 +458,7 @@ class Composer(object):
             # Create a new empty numbering part
             partname = PackURI('/word/numbering.xml')
             content_type = CT.WML_NUMBERING
-            xml_path = os.path.join(
-                os.path.dirname(__file__), 'templates', 'numbering.xml')
-            with open(xml_path, 'rb') as f:
-                xml_bytes = f.read()
-            element = parse_xml(xml_bytes)
+            element = parse_xml(load_template('numbering.xml'))
             numbering_part = NumberingPart(
                 partname, content_type, element, self.doc.part.package)
             self.doc.part.relate_to(numbering_part, RT.NUMBERING)
@@ -551,10 +544,7 @@ class Composer(object):
         partname = PackURI('/word/header%s.xml' % next_id)
         content_type = CT.WML_HEADER
         if not content:
-            xml_path = os.path.join(
-                os.path.dirname(__file__), 'templates', 'header.xml')
-            with open(xml_path, 'rb') as f:
-                content = f.read()
+            content = load_template('header.xml')
         header_part = Part(
             partname, content_type, content, self.doc.part.package)
         self.doc.part.relate_to(header_part, RT.HEADER)
@@ -569,10 +559,7 @@ class Composer(object):
         partname = PackURI('/word/footer%s.xml' % next_id)
         content_type = CT.WML_FOOTER
         if not content:
-            xml_path = os.path.join(
-                os.path.dirname(__file__), 'templates', 'footer.xml')
-            with open(xml_path, 'rb') as f:
-                content = f.read()
+            content = load_template('footer.xml')
         footer_part = Part(
             partname, content_type, content, self.doc.part.package)
         self.doc.part.relate_to(footer_part, RT.FOOTER)

@@ -1,5 +1,6 @@
 from docx.oxml.xmlchemy import BaseOxmlElement
 from docx.oxml.ns import nsmap
+import os.path
 import re
 
 NS = {
@@ -46,3 +47,9 @@ def word_to_python_date_format(format_str):
     for word_format, python_format in date_format_map:
         format_str = re.sub(word_format, python_format, format_str)
     return format_str
+
+
+def load_template(name):
+    path = os.path.join(os.path.dirname(__file__), 'templates', name)
+    with open(path, 'rb') as f:
+        return f.read()
