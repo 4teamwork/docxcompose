@@ -343,7 +343,7 @@ class FieldBase(object):
     """Class used to represent a docproperty field in the document.xml."""
 
     fieldname_and_format_search_expr = re.compile(
-        r'DOCPROPERTY +"{0,1}([^\\]*?)"{0,1} +(?:\\\@ +"{0,1}([^\\]*?)"{0,1} +){0,1}\\\* MERGEFORMAT',
+        r'DOCPROPERTY +"{0,1}([^\\]*?)"{0,1} +(?:\\\@ +"{0,1}([^\\]*?)"{0,1} +){0,1}\\\* MERGEFORMAT',  # noqa
         flags=re.UNICODE,
     )
 
