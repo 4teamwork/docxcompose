@@ -23,11 +23,9 @@ jobs:
           poetry-version: 2.1
       - name: Install dependencies
         run: poetry install -E dev
-      - name: isort
-        run: poetry run isort --check-only --quiet --settings pyproject.toml .
-      - name: flake8
-        run: poetry run flake8
-      - name: black
-        run: poetry run black --check --config pyproject.toml .
-      - name: tests
+      - name: Ruff Linter
+        run: poetry run ruff check
+      - name: Ruff Formatter
+        run: poetry run ruff format --check
+      - name: Tests
         run: poetry run pytest
