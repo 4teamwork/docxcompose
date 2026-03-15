@@ -5,7 +5,7 @@ description = "Compose .docx documents"
 authors = [{name="Thomas Buchberger", email="<t.buchberger@4teamwork.ch>"}]
 license = "MIT license"
 readme = "README.rst"
-requires-python = ">=3.12,<4.0"
+requires-python = ">=3.10,<4.0"
 dependencies = [
 	"babel (>=2.10.0)",
 	"lxml",
