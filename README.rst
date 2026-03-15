@@ -31,6 +31,26 @@ line, e.g.:
     $ docxcompose files/master.docx files/content.docx -o files/composed.docx
 
 
+Docker container
+----------------
+
+docxcompose is also available as a Docker container allowing to compose docx 
+documents through a web service.
+
+To start the web service, run:
+
+.. code:: sh
+
+    $ docker run -it --rm -p 8080:8080 4teamwork/docxcompose
+
+To compose documents, just upload them in the desired order as a ``multipart/form-data``
+request to the web service and you will get back the composed document. Example with curl:
+
+.. code:: sh
+
+    $ curl -F "first=@first.docx" -F "second=@second.docx" -o composed.docx http://localhost:8080/
+
+
 Installation for development
 ----------------------------
 

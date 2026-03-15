@@ -1,0 +1,8 @@
+services:
+  docxcompose:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: 4teamwork/docxcompose:latest
+    ports:
+      - 8080:8080
