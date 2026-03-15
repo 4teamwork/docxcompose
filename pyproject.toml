@@ -10,7 +10,6 @@ dependencies = [
 	"babel (>=2.10.0)",
 	"lxml",
 	"python-docx (>=1.0.0)",
-	"six",
 ]
 
 [project.optional-dependencies]
