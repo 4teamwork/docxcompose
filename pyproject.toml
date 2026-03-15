@@ -73,3 +73,7 @@ showcontent = true
 directory = "other"
 name = "Other changes:"
 showcontent = true
+
+[tool.zest-releaser]
+release = "false"
+history-file = "CHANGELOG.md"
