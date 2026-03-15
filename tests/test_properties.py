@@ -23,7 +23,6 @@ from docxcompose.utils import xpath
 
 
 class TestIdentifyDocpropertiesInDocument(object):
-
     def test_identifies_simple_fields_correctly(self):
         document = Document(docx_path("outdated_docproperty_with_umlauts.docx"))
         properties = CustomProperties(document).find_docprops_in_document()
@@ -39,9 +38,9 @@ class TestIdentifyDocpropertiesInDocument(object):
         properties = CustomProperties(document).find_docprops_in_document()
 
         assert len(document.paragraphs) == 1, "input file should contains one paragraph"
-        assert (
-            len(properties) == 3
-        ), "input should contain three complex field docproperties"
+        assert len(properties) == 3, (
+            "input should contain three complex field docproperties"
+        )
 
         # check that all fields were identified as complex fields
         for prop in properties:
@@ -72,9 +71,9 @@ class TestIdentifyDocpropertiesInDocument(object):
         document = Document(docx_path("three_props_in_same_paragraph.docx"))
         properties = CustomProperties(document).find_docprops_in_document()
 
-        assert (
-            len(properties) == 3
-        ), "input should contain three complex field docproperties"
+        assert len(properties) == 3, (
+            "input should contain three complex field docproperties"
+        )
 
         # In the first field, there are the following runs: begin, docprop,
         # a separate, 3 runs for the value (because of spellcheck) and end
@@ -125,21 +124,21 @@ class TestIdentifyDocpropertiesInDocument(object):
         document = Document(docx_path("complex_field_without_separate.docx"))
         properties = CustomProperties(document).find_docprops_in_document()
 
-        assert (
-            len(properties) == 2
-        ), "input should contain two complex field docproperties"
+        assert len(properties) == 2, (
+            "input should contain two complex field docproperties"
+        )
 
         # The "User.FullName" docproperty should be the one without a separate run
         # In this field, there are the following runs: begin, docprop and end
         matches = [prop for prop in properties if prop.name == "User.FullName"]
         assert len(matches) == 1, "There should be only one User.FullName docproperty"
         prop = matches[0]
-        assert (
-            prop.get_separate_run() is None
-        ), "This complex field should not have a separate run."
-        assert (
-            prop.get_runs_for_update() == []
-        ), "As there is no separate run, there should be no run to update"
+        assert prop.get_separate_run() is None, (
+            "This complex field should not have a separate run."
+        )
+        assert prop.get_runs_for_update() == [], (
+            "As there is no separate run, there should be no run to update"
+        )
 
         # As there are no separate, all runs should be removed when dissolving
         # the property.
@@ -153,9 +152,9 @@ class TestIdentifyDocpropertiesInDocument(object):
         document = Document(docx_path("complex_field_with_split_fieldname.docx"))
         properties = CustomProperties(document).find_docprops_in_document()
 
-        assert (
-            len(properties) == 1
-        ), "input should contain one complex field docproperties"
+        assert len(properties) == 1, (
+            "input should contain one complex field docproperties"
+        )
 
         prop = properties[0]
 
@@ -187,9 +186,9 @@ class TestIdentifyDocpropertiesInDocument(object):
         document = Document(docx_path("docproperties_header_footer_3_sections.docx"))
         properties = CustomProperties(document).find_docprops_in_document()
 
-        assert (
-            len(properties) == 5
-        ), "input should contain 5 properties in header/footer and body"
+        assert len(properties) == 5, (
+            "input should contain 5 properties in header/footer and body"
+        )
 
         expected_properties = [
             "Text Property",
@@ -203,7 +202,6 @@ class TestIdentifyDocpropertiesInDocument(object):
 
 
 class TestUpdateAllDocproperties(object):
-
     def test_updates_doc_properties_in_header(self):
         document = Document(docx_path("docproperties_header.docx"))
 
@@ -410,9 +408,9 @@ class TestUpdateAllDocproperties(object):
         document = Document(docx_path("spellchecked_docproperty.docx"))
         paragraphs = xpath(document.element.body, "//w:p")
         assert len(paragraphs) == 1, "input file contains one paragraph"
-        assert (
-            len(xpath(document.element.body, "//w:instrText")) == 1
-        ), "input contains one complex field docproperty"
+        assert len(xpath(document.element.body, "//w:instrText")) == 1, (
+            "input contains one complex field docproperty"
+        )
         w_p = paragraphs[0]
 
         cached_values = cached_complex_field_values(w_p)
@@ -423,18 +421,18 @@ class TestUpdateAllDocproperties(object):
 
         w_p = xpath(document.element.body, "//w:p")[0]
         cached_values = cached_complex_field_values(w_p)
-        assert (
-            len(cached_values) == 1
-        ), "doc property value has been reset to one cached value"
+        assert len(cached_values) == 1, (
+            "doc property value has been reset to one cached value"
+        )
         assert cached_values[0] == "i will be spllchecked!"
 
     def test_complex_docprop_with_multiple_textnode_in_same_run_are_updated(self):
         document = Document(docx_path("two_textnodes_in_run_docproperty.docx"))
         paragraphs = xpath(document.element.body, "//w:p")
         assert len(paragraphs) == 1, "input file contains one paragraph"
-        assert (
-            len(xpath(document.element.body, "//w:instrText")) == 1
-        ), "input contains one complex field docproperty"
+        assert len(xpath(document.element.body, "//w:instrText")) == 1, (
+            "input contains one complex field docproperty"
+        )
 
         w_p = paragraphs[0]
         cached_values = cached_complex_field_values(w_p)
@@ -445,9 +443,9 @@ class TestUpdateAllDocproperties(object):
 
         w_p = xpath(document.element.body, "//w:p")[0]
         cached_values = cached_complex_field_values(w_p)
-        assert (
-            len(cached_values) == 1
-        ), "doc property value has been reset to one cached value"
+        assert len(cached_values) == 1, (
+            "doc property value has been reset to one cached value"
+        )
         assert cached_values[0] == "i will be spllchecked!"
 
     def test_three_complex_docprop_in_same_paragraph(self):
@@ -456,9 +454,9 @@ class TestUpdateAllDocproperties(object):
 
         assert len(document.paragraphs) == 1, "input file should contains one paragraph"
         paragraph = document.paragraphs[0]
-        assert (
-            len(properties.find_docprops_in_document()) == 3
-        ), "input should contain three complex field docproperties"
+        assert len(properties.find_docprops_in_document()) == 3, (
+            "input should contain three complex field docproperties"
+        )
 
         text = "{text} / {num} mor between the fields {text} and some afte the three fields"
         assert paragraph.text == text.format(text="I was spellcecked", num=0)
@@ -471,9 +469,9 @@ class TestUpdateAllDocproperties(object):
         document = Document(docx_path("multiple_identical_properties.docx"))
         assert len(document.paragraphs) == 3, "input file should contain 3 paragraphs"
         for paragraph in document.paragraphs:
-            assert (
-                len(xpath(paragraph._p, ".//w:instrText")) == 1
-            ), "paragraph should contain one complex field docproperties"
+            assert len(xpath(paragraph._p, ".//w:instrText")) == 1, (
+                "paragraph should contain one complex field docproperties"
+            )
 
             assert paragraph.text == "Foo"
 
@@ -496,17 +494,17 @@ class TestUpdateAllDocproperties(object):
         matches = [prop for prop in properties if prop.name == "User.FullName"]
         assert len(matches) == 1, "There should be only one User.FullName docproperty"
         fullname = matches[0]
-        assert (
-            fullname.get_separate_run() is None
-        ), "This complex field should not have a separate run."
+        assert fullname.get_separate_run() is None, (
+            "This complex field should not have a separate run."
+        )
 
         # Make sure that 'Dossier.Title' field has a separate node
         matches = [prop for prop in properties if prop.name == "Dossier.Title"]
         assert len(matches) == 1, "There should be only one Dossier.Title docproperty"
         title = matches[0]
-        assert (
-            title.get_separate_run() is not None
-        ), "This complex field should have a separate run."
+        assert title.get_separate_run() is not None, (
+            "This complex field should have a separate run."
+        )
 
         # Check the content of the paragraphs before update
         assert len(paragraphs) == 2
@@ -537,9 +535,9 @@ class TestUpdateAllDocproperties(object):
         for i, (expected, paragraph) in enumerate(
             zip(expected_values, document.paragraphs)
         ):
-            assert (
-                paragraph.text == expected
-            ), "docprop {} was not updated correctly".format(i + 1)
+            assert paragraph.text == expected, (
+                "docprop {} was not updated correctly".format(i + 1)
+            )
 
     def test_date_docprops_respect_language(self):
         document = Document(docx_path("date_docproperties_with_format.docx"))
@@ -572,7 +570,6 @@ class TestUpdateAllDocproperties(object):
 
 
 class TestUpdateSpecificDocproperty(object):
-
     def test_simple_field_gets_updated(self):
         document = Document(docx_path("outdated_docproperty_with_umlauts.docx"))
         assert_simple_field_value("xxx", document.element.body, "F\xfc\xfc")
@@ -586,9 +583,9 @@ class TestUpdateSpecificDocproperty(object):
         assert len(document.paragraphs) == 6, "input file should contain 6 paragraphs"
 
         properties = xpath(document.element.body, ".//w:instrText")
-        assert (
-            len(properties) == 5
-        ), "input should contain five complex field docproperties"
+        assert len(properties) == 5, (
+            "input should contain five complex field docproperties"
+        )
 
         expected_paragraphs = [
             "Custom Doc Properties",
@@ -611,9 +608,9 @@ class TestUpdateSpecificDocproperty(object):
         document = Document(docx_path("multiple_identical_properties.docx"))
         assert len(document.paragraphs) == 3, "input file should contain 3 paragraphs"
         for paragraph in document.paragraphs:
-            assert (
-                len(xpath(paragraph._p, ".//w:instrText")) == 1
-            ), "paragraph should contain one complex field docproperties"
+            assert len(xpath(paragraph._p, ".//w:instrText")) == 1, (
+                "paragraph should contain one complex field docproperties"
+            )
 
             assert paragraph.text == "Foo"
 
@@ -626,7 +623,6 @@ class TestUpdateSpecificDocproperty(object):
 
 
 class TestDissolveField(object):
-
     def test_removes_simple_field_but_keeps_value(self):
         document = Document(docx_path("outdated_docproperty_with_umlauts.docx"))
         assert len(document.paragraphs) == 1, "input file should contain 1 paragraph"
@@ -648,9 +644,9 @@ class TestDissolveField(object):
         assert len(document.paragraphs) == 6, "input file should contain 6 paragraphs"
 
         properties = xpath(document.element.body, ".//w:instrText")
-        assert (
-            len(properties) == 5
-        ), "input should contain five complex field docproperties"
+        assert len(properties) == 5, (
+            "input should contain five complex field docproperties"
+        )
 
         expected_paragraphs = [
             "Custom Doc Properties",
@@ -674,9 +670,9 @@ class TestDissolveField(object):
     def test_dissolves_all_instances_of_given_field(self):
         document = Document(docx_path("multiple_identical_properties.docx"))
         assert len(document.paragraphs) == 3, "input file should contain 3 paragraphs"
-        assert (
-            len(xpath(document.element.body, ".//w:instrText")) == 3
-        ), "document should contain three complex field docproperties"
+        assert len(xpath(document.element.body, ".//w:instrText")) == 3, (
+            "document should contain three complex field docproperties"
+        )
 
         for paragraph in document.paragraphs:
             assert paragraph.text == "Foo"
@@ -684,9 +680,9 @@ class TestDissolveField(object):
         CustomProperties(document).dissolve_fields("Text Property")
 
         assert len(document.paragraphs) == 3
-        assert (
-            len(xpath(document.element.body, ".//w:instrText")) == 0
-        ), "document should not contain any complex field anymore"
+        assert len(xpath(document.element.body, ".//w:instrText")) == 0, (
+            "document should not contain any complex field anymore"
+        )
         for paragraph in document.paragraphs:
             assert paragraph.text == "Foo", "value should have been kept in document"
 
@@ -695,9 +691,9 @@ class TestDissolveField(object):
         assert len(document.paragraphs) == 1, "input file should contains one paragraph"
         paragraph = document.paragraphs[0]
         properties = CustomProperties(document)
-        assert (
-            len(properties.find_docprops_in_document()) == 3
-        ), "input should contain three complex field docproperties"
+        assert len(properties.find_docprops_in_document()) == 3, (
+            "input should contain three complex field docproperties"
+        )
 
         text = "{text} / {num} mor between the fields {text} and some afte the three fields"
         assert paragraph.text == text.format(text="I was spellcecked", num=0)
@@ -705,9 +701,9 @@ class TestDissolveField(object):
         properties.dissolve_fields("Text Property")
 
         assert len(document.paragraphs) == 1
-        assert (
-            len(properties.find_docprops_in_document()) == 1
-        ), "document should contain one complex field after removal"
+        assert len(properties.find_docprops_in_document()) == 1, (
+            "document should contain one complex field after removal"
+        )
         assert paragraph.text == text.format(text="I was spellcecked", num=0)
 
 

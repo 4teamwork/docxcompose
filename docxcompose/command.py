@@ -11,12 +11,12 @@ def setup_parser():
     parser = ArgumentParser(description="compose multiple docx files into one file.")
     parser.add_argument(
         "master",
-        help="path to master template that defines styles, " "headings and so on",
+        help="path to master template that defines styles, headings and so on",
     )
     parser.add_argument(
         "files",
         nargs="+",
-        help="path to one or more word-files to be appended " "to the master template",
+        help="path to one or more word-files to be appended to the master template",
         metavar="file",
     )
     parser.add_argument(
