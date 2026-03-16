@@ -40,8 +40,8 @@ build-backend = "poetry.core.masonry.api"
 target-version = "py310"
 
 [tool.ruff.lint]
-select = ["E", "F", "I"]
-ignore = []
+select = ["B", "E", "F", "I"]
+ignore = ["B904", "B905"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["E501"]
