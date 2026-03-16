@@ -20,7 +20,6 @@ version = importlib.metadata.version("docxcompose")
 async def compose(request):
 
     documents = []
-    temp_dir = None
 
     if not request.content_type == "multipart/form-data":
         logger.info(
@@ -81,7 +80,7 @@ async def stream_file(request, filename, content_type):
         reason="OK",
         headers={
             "Content-Type": content_type,
-            "Content-Disposition": f'attachment; filename="{os.path.basename(filename)}"',
+            "Content-Disposition": f'attachment; filename="{os.path.basename(filename)}"',  # noqa
         },
     )
     await response.prepare(request)

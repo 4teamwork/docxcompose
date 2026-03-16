@@ -36,7 +36,6 @@ PART_RELTYPES_WITH_STYLES = [
 
 
 class Composer(object):
-
     def __init__(self, doc):
         self.doc = doc
         self.pkg = doc.part.package

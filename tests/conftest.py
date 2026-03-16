@@ -18,7 +18,6 @@ def pytest_assertrepr_compare(config, op, left, right):
         and isinstance(right, ComparableDocument)
         and op == "=="
     ):
-
         left.post_compare_failed(right)
         right.post_compare_failed(left)
 
@@ -47,7 +46,6 @@ def pytest_assertrepr_compare(config, op, left, right):
 
         diffs = []
         for lpart, rpart in left.neq_parts:
-
             if not lpart.partname.endswith(".xml"):
                 diffs.append("Binary parts differ {}".format(lpart.partname))
                 diffs.append("")

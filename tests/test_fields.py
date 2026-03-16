@@ -7,13 +7,11 @@ from docxcompose.utils import word_to_python_date_format
 
 
 class FieldForTesting(FieldBase):
-
     def _get_fieldname_string(self):
         return self.node
 
 
 class TestFieldNameParsing(object):
-
     def test_can_parse_quoted_property_names(self):
         node = ' DOCPROPERTY "Propertyname"  \\* MERGEFORMAT '
         assert FieldForTesting(node).name == "Propertyname"
@@ -40,7 +38,6 @@ class TestFieldNameParsing(object):
 
 
 class TestFieldDateFormatParsing(object):
-
     def test_can_parse_quoted_date_format(self):
         node = ' DOCPROPERTY "Propertyname" \\@ "ddd-yy-MM" \\* MERGEFORMAT '
         assert FieldForTesting(node).name == "Propertyname"
@@ -73,7 +70,6 @@ class TestFieldDateFormatParsing(object):
 
 
 class TestFieldDateFormatMapping(object):
-
     def test_correctly_maps_simple_date(self):
         date = datetime(2020, 11, 19)
 

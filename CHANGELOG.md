@@ -1,3 +1,7 @@
+Changelog
+=========
+
+.. towncrier release notes start
 
 2.0.2 (2026-02-17)
 ------------------
@@ -26,10 +30,6 @@ Bug fixes:
 Other changes:
 
 - Use poetry for dependecy management and towncrier and zest.releaser for release managment. [jch]
-
-
-Changelog
-=========
 
 
 1.4.0 (2022-12-14)
