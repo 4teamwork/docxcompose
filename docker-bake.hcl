@@ -37,4 +37,13 @@ target "default" {
     "linux/amd64",
     strlen(GIT_TAG) > 0 ? "linux/arm64" : "",
   ]
+  attest = [
+    {
+      type = "provenance"
+      mode = "max"
+    },
+    {
+      type = "sbom"
+    }
+  ]
 }
