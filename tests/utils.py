@@ -102,9 +102,9 @@ class ComposedDocument(ComparableDocument):
 
     """
 
-    def __init__(self, master_filename, filename, *filenames):
+    def __init__(self, master_filename, *filenames):
         composer = Composer(Document(docx_path(master_filename)))
-        for filename in (filename,) + filenames:
+        for filename in filenames:
             composer.append(Document(docx_path(filename)))
 
         super(ComposedDocument, self).__init__(composer.doc)

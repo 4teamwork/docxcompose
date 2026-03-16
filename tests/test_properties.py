@@ -524,9 +524,7 @@ class TestUpdateAllDocproperties(object):
         assert len(document.paragraphs) == 3, "input file should contain 3 paragraph"
 
         expected_values = ["11.06.19", "mardi 11 juin 2019", "11-6-19 0:0:0"]
-        for i, (expected, paragraph) in enumerate(
-            zip(expected_values, document.paragraphs)
-        ):
+        for expected, paragraph in zip(expected_values, document.paragraphs):
             assert paragraph.text == expected
 
         CustomProperties(document).update_all()
@@ -544,19 +542,19 @@ class TestUpdateAllDocproperties(object):
         assert len(document.paragraphs) == 3, "input file should contain 3 paragraph"
 
         CustomProperties(document).update_all()
-        document.paragraphs[1].text == "jeudi 23 janvier 2020"
+        assert document.paragraphs[1].text == "jeudi 23 janvier 2020"
 
         document.element.xpath(".//w:lang")[0].set(
             docx.oxml.shared.qn("w:val"), "de-CH"
         )
         CustomProperties(document).update_all()
-        document.paragraphs[1].text == "Donnerstag 23 Januar 2020"
+        assert document.paragraphs[1].text == "Donnerstag 23 Januar 2020"
 
         document.element.xpath(".//w:lang")[0].set(
             docx.oxml.shared.qn("w:val"), "en-US"
         )
         CustomProperties(document).update_all()
-        document.paragraphs[1].text == "Thursday 23 January 2020"
+        assert document.paragraphs[1].text == "Thursday 23 January 2020"
 
     def test_docprops_with_split_fieldname_get_updated(self):
         document = Document(docx_path("complex_field_with_split_fieldname.docx"))
