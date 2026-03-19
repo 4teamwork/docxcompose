@@ -1,7 +1,7 @@
 Changelog
 =========
 
-.. towncrier release notes start
+<!-- towncrier release notes start -->
 
 2.0.2 (2026-02-17)
 ------------------
