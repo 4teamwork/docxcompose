@@ -3,6 +3,21 @@ Changelog
 
 <!-- towncrier release notes start -->
 
+
+2.1.0 (2026-03-19)
+------------------
+
+New features:
+
+- Provide a web service as a Docker container for composing documents. [buchi]
+
+
+Other changes:
+
+- Lowered the minimum required Python version from 3.12 to 3.10. [buchi]
+- Removed dependency on six. [buchi]
+
+
 2.0.2 (2026-02-17)
 ------------------
 
