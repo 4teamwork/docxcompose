@@ -10,6 +10,7 @@ import tempfile
 from docx import Document
 
 from docxcompose.composer import Composer
+from docxcompose.utils import to_bool
 
 
 CHUNK_SIZE = 65536
@@ -48,7 +49,7 @@ async def compose(request):
         composed_filename = os.path.join(temp_dir, "composed.docx")
 
         try:
-            composer = Composer(Document(documents.pop(0)))
+            composer = Composer(Document(documents.pop(0)), **compose_options(request))
             for document in documents:
                 composer.append(Document(document))
             composer.save(composed_filename)
@@ -61,6 +62,12 @@ async def compose(request):
             composed_filename,
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         )
+
+
+def compose_options(request):
+    return {
+        "preserve_styles": to_bool(request.rel_url.query.get("preserve_styles", "")),
+    }
 
 
 async def save_part_to_file(part, directory):

@@ -27,6 +27,11 @@ def setup_parser():
         help="path to the output file",
         metavar="file",
     )
+    parser.add_argument(
+        "--preserve-styles",
+        action="store_true",
+        default=False,
+    )
     return parser
 
 
@@ -46,7 +51,10 @@ def parse_args(parser, args):
 
 
 def compose_files(parser, parsed_args):
-    composer = Composer(Document(parsed_args.master))
+    options = {
+        "preserve_styles": parsed_args.preserve_styles,
+    }
+    composer = Composer(Document(parsed_args.master), **options)
     for slave_path in parsed_args.files:
         composer.append(Document(slave_path))
 

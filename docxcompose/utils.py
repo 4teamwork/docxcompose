@@ -48,3 +48,16 @@ def word_to_python_date_format(format_str):
     for word_format, python_format in date_format_map:
         format_str = re.sub(word_format, python_format, format_str)
     return format_str
+
+
+def increment_name(name):
+    increment_part = name.split("_")[-1]
+    try:
+        increment = int(increment_part)
+    except ValueError:
+        return f"{name}_1"
+    return f"{name.removesuffix(increment_part)}{increment + 1}"
+
+
+def to_bool(value):
+    return value.lower() in ["1", "yes", "true", "on", "ok"]

@@ -62,6 +62,18 @@ async def test_post_returns_500_if_compose_fails(http_client):
     assert text == "Failed composing documents"
 
 
+async def test_post_with_url_parameters(http_client):
+    files = {
+        "master": open(docx_path("master.docx"), "rb"),
+        "table": open(docx_path("table.docx"), "rb"),
+    }
+    resp = await http_client.post("/?preserve_styles=1", data=files)
+    assert resp.status == 200
+    composed_doc = ComparableDocument(Document(BytesIO(await resp.read())))
+    composed_fixture = FixtureDocument("table.docx")
+    assert composed_doc == composed_fixture
+
+
 async def test_healtcheck_returns_200(http_client):
     resp = await http_client.get("/healthcheck")
     assert resp.status == 200
