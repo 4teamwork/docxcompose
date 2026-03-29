@@ -61,3 +61,74 @@ def increment_name(name):
 
 def to_bool(value):
     return value.lower() in ["1", "yes", "true", "on", "ok"]
+
+
+def xml_elements_equal(
+    left,
+    right,
+    ignored_tags=None,
+    compare_text=True,
+    compare_tail=False,
+    compare_attributes=True,
+):
+    return xml_element_signature(
+        left,
+        ignored_tags=ignored_tags,
+        compare_text=compare_text,
+        compare_tail=compare_tail,
+        compare_attributes=compare_attributes,
+    ) == xml_element_signature(
+        right,
+        ignored_tags=ignored_tags,
+        compare_text=compare_text,
+        compare_tail=compare_tail,
+        compare_attributes=compare_attributes,
+    )
+
+
+def xml_element_signature(
+    element,
+    ignored_tags=None,
+    compare_text=True,
+    compare_tail=False,
+    compare_attributes=True,
+    is_root=True,
+):
+    """
+    Creates a canonical, recursive representation of an element.
+
+    Child elements are included as a sorted list of signatures,
+    so their order is irrelevant.
+    """
+    tag = element.tag
+    attrs = tuple(sorted(element.attrib.items())) if compare_attributes else ()
+    text = normalize_text(element.text) if compare_text else None
+    tail = normalize_text(element.tail) if compare_tail else None
+
+    child_signatures = []
+    for child in element:
+        if ignored_tags and child.tag in ignored_tags:
+            continue
+
+        child_signatures.append(
+            xml_element_signature(
+                child,
+                ignored_tags=ignored_tags,
+                compare_text=compare_text,
+                compare_tail=compare_tail,
+                compare_attributes=compare_attributes,
+                is_root=False,
+            )
+        )
+    child_signatures.sort()
+
+    if is_root:
+        return (None, None, None, None, tuple(child_signatures))
+    else:
+        return (tag, attrs, text, tail, tuple(child_signatures))
+
+
+def normalize_text(value):
+    if value is None:
+        return ""
+    return value.strip()

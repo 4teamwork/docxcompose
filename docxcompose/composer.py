@@ -17,6 +17,7 @@ from docxcompose.image import ImageWrapper
 from docxcompose.properties import CustomProperties
 from docxcompose.utils import increment_name
 from docxcompose.utils import NS
+from docxcompose.utils import xml_elements_equal
 from docxcompose.utils import xpath
 
 
@@ -34,6 +35,13 @@ REFERENCED_PARTS_IGNORED_RELTYPES = set(
 PART_RELTYPES_WITH_STYLES = [
     RT.FOOTNOTES,
 ]
+
+IGNORED_STYLE_TAGS = set(
+    [
+        "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}name",
+        "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}rsid",
+    ]
+)
 
 
 class Composer(object):
@@ -308,7 +316,11 @@ class Composer(object):
                 if our_style_id not in self._preserved_styles:
                     style_element = deepcopy(doc.styles.element.get_by_id(style_id))
                     our_style_element = self.doc.styles.element.get_by_id(our_style_id)
-                    if style_element.xml != our_style_element.xml:
+                    if not xml_elements_equal(
+                        style_element,
+                        our_style_element,
+                        ignored_tags=IGNORED_STYLE_TAGS,
+                    ):
                         new_id = increment_name(our_style_id)
                         new_name = None
                         if style_element.name is not None:
