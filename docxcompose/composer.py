@@ -51,6 +51,7 @@ class Composer(object):
 
         self.restart_numbering = True
         self.preserve_styles = preserve_styles
+        self._preserved_styles = {}
 
         self.reset_reference_mapping()
 
@@ -69,7 +70,7 @@ class Composer(object):
     def insert(self, index, doc, remove_property_fields=True):
         """Insert the given document at the given index."""
         self.reset_reference_mapping()
-        self._preserved_styles = {}
+        self._current_preserved_styles = {}
 
         # Remove custom property fields but keep the values
         if remove_property_fields:
@@ -313,14 +314,29 @@ class Composer(object):
             # To preserve styles with the same id from added documents, we
             # create a copy and append a suffix to the id and name.
             if self.preserve_styles and our_style_id in our_style_ids:
-                if our_style_id not in self._preserved_styles:
+                if our_style_id not in self._current_preserved_styles:
                     style_element = deepcopy(doc.styles.element.get_by_id(style_id))
                     our_style_element = self.doc.styles.element.get_by_id(our_style_id)
-                    if not xml_elements_equal(
-                        style_element,
-                        our_style_element,
-                        ignored_tags=IGNORED_STYLE_TAGS,
-                    ):
+
+                    # Check if we already have an identical style
+                    preserved_style_ids = self._preserved_styles.get(
+                        our_style_id, [our_style_id]
+                    )
+                    matched_style_id = None
+                    for pstyle_id in preserved_style_ids:
+                        our_style_element = self.doc.styles.element.get_by_id(pstyle_id)
+                        if xml_elements_equal(
+                            style_element,
+                            our_style_element,
+                            ignored_tags=IGNORED_STYLE_TAGS,
+                        ):
+                            matched_style_id = pstyle_id
+                            self._current_preserved_styles[our_style_id] = (
+                                style_element.styleId
+                            )
+                            break
+                    # No matching style found, insert style with a new name
+                    if matched_style_id is None:
                         new_id = increment_name(our_style_id)
                         new_name = None
                         if style_element.name is not None:
@@ -335,9 +351,15 @@ class Composer(object):
                         self.doc.styles.element.append(style_element)
                         self.add_numberings(doc, style_element)
                         self.add_linked_styles(doc, style_element)
-                        self._preserved_styles[our_style_id] = style_element.styleId
+                        self._current_preserved_styles[our_style_id] = new_id
+                        self._preserved_styles.setdefault(
+                            our_style_id, [our_style_id]
+                        ).append(new_id)
+                    else:
+                        self._current_preserved_styles[our_style_id] = matched_style_id
+
                 for el in xpath(element, ".//w:tblStyle|.//w:pStyle|.//w:rStyle"):
-                    el.val = self._preserved_styles[our_style_id]
+                    el.val = self._current_preserved_styles[our_style_id]
             elif our_style_id not in our_style_ids:
                 style_element = deepcopy(doc.styles.element.get_by_id(style_id))
                 if style_element is not None:

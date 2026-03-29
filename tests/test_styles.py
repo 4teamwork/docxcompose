@@ -87,6 +87,20 @@ def test_ignore_styles_with_same_id():
     assert "MyCustomStyle_1" not in style_ids
 
 
+def test_preserve_styles_does_not_duplicate_identical_styles():
+    composer = Composer(
+        Document(docx_path("styles_preserve1.docx")), preserve_styles=True
+    )
+    composer.append(Document(docx_path("styles_preserve2.docx")))
+    composer.append(Document(docx_path("styles_preserve2.docx")))
+    composer.append(Document(docx_path("styles_preserve1.docx")))
+    assert [
+        s.style_id
+        for s in composer.doc.styles
+        if s.style_id.startswith("MyCustomStyle")
+    ] == ["MyCustomStyle", "MyCustomStyleZchn", "MyCustomStyle_1"]
+
+
 @pytest.fixture
 def merged_styles():
     composer = Composer(Document(docx_path("styles_en.docx")))
