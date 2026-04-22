@@ -1,5 +1,6 @@
 import pytest
 from docx import Document
+from utils import ComparableDocument
 from utils import ComposedDocument
 from utils import docx_path
 from utils import FixtureDocument
@@ -62,6 +63,42 @@ def test_styles_are_not_switched_for_first_numbering_element():
 def test_continue_when_no_styles():
     """Expects not to throw a type error"""
     ComposedDocument("aatmay.docx", "aatmay.docx")
+
+
+def test_preserve_styles_with_same_id():
+    composer = Composer(
+        Document(docx_path("styles_preserve1.docx")), preserve_styles=True
+    )
+    composer.append(Document(docx_path("styles_preserve2.docx")))
+    style_ids = [s.style_id for s in composer.doc.styles]
+    assert "MyCustomStyle" in style_ids
+    assert "MyCustomStyle_1" in style_ids
+
+    expected = FixtureDocument("styles_preserve.docx")
+    composed = ComparableDocument(composer.doc)
+    assert composed == expected
+
+
+def test_ignore_styles_with_same_id():
+    composer = Composer(Document(docx_path("styles_preserve1.docx")))
+    composer.append(Document(docx_path("styles_preserve2.docx")))
+    style_ids = [s.style_id for s in composer.doc.styles]
+    assert "MyCustomStyle" in style_ids
+    assert "MyCustomStyle_1" not in style_ids
+
+
+def test_preserve_styles_does_not_duplicate_identical_styles():
+    composer = Composer(
+        Document(docx_path("styles_preserve1.docx")), preserve_styles=True
+    )
+    composer.append(Document(docx_path("styles_preserve2.docx")))
+    composer.append(Document(docx_path("styles_preserve2.docx")))
+    composer.append(Document(docx_path("styles_preserve1.docx")))
+    assert [
+        s.style_id
+        for s in composer.doc.styles
+        if s.style_id.startswith("MyCustomStyle")
+    ] == ["MyCustomStyle", "MyCustomStyleZchn", "MyCustomStyle_1"]
 
 
 @pytest.fixture
