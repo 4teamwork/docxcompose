@@ -1,1 +1,0 @@
-Optionally preserve styles with the same id of appended documents. [buchi]

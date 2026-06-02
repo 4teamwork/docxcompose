@@ -4,6 +4,15 @@ Changelog
 <!-- towncrier release notes start -->
 
 
+2.2.0 (2026-06-02)
+------------------
+
+New features:
+
+- Optionally preserve styles with the same id of appended documents. [buchi]
+- Retain formattings from default styles when preserving styles. [buchi]
+
+
 2.1.0 (2026-03-19)
 ------------------
 

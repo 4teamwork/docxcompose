@@ -1,1 +1,0 @@
-Retain formattings from default styles when preserving styles. [buchi]
