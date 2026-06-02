@@ -51,6 +51,24 @@ request to the web service and you will get back the composed document. Example 
     $ curl -F "first=@first.docx" -F "second=@second.docx" -o composed.docx http://localhost:8080/
 
 
+Options
+-------
+
+Preserving styles
+~~~~~~~~~~~~~~~~~
+
+By default docxcompose tries to apply styles from the first document to the
+appended documents. This should ensure a consistent appearance throughout the
+composed document.
+
+With the ``preserve-styles`` option, it's possible to change this behavior to
+keep the styles of the appended documents.
+
+The option can be given through the command line (``--preserve-styles``),
+via the web service url using an url parameter (``preserve_styles=1``) or using
+Python ``Composer(preserve_styles=True)``.
+
+
 Installation for development
 ----------------------------
 
