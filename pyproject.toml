@@ -1,6 +1,6 @@
 [project]
 name = "docxcompose"
-version = "2.2.0"
+version = "2.2.1.dev0"
 description = "Compose .docx documents"
 authors = [{name="Thomas Buchberger", email="<t.buchberger@4teamwork.ch>"}]
 license = "MIT license"
