@@ -101,6 +101,16 @@ def test_preserve_styles_does_not_duplicate_identical_styles():
     ] == ["MyCustomStyle", "MyCustomStyleZchn", "MyCustomStyle_1"]
 
 
+def test_retain_formatting_from_default_styles():
+    composer = Composer(
+        Document(docx_path("styles_default1.docx")), preserve_styles=True
+    )
+    composer.append(Document(docx_path("styles_default2.docx")))
+    composed = ComparableDocument(composer.doc)
+    expected = FixtureDocument("styles_default.docx")
+    assert composed == expected
+
+
 @pytest.fixture
 def merged_styles():
     composer = Composer(Document(docx_path("styles_en.docx")))

@@ -4,6 +4,7 @@ import re
 from collections import OrderedDict
 from copy import deepcopy
 
+from docx.enum.style import WD_STYLE_TYPE
 from docx.opc.constants import CONTENT_TYPE as CT
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from docx.opc.oxml import serialize_part_xml
@@ -79,6 +80,7 @@ class Composer(object):
                 cprops.dissolve_fields(name)
 
         self._create_style_id_mapping(doc)
+        self.retain_formatting_from_default_styles(doc)
 
         for element in doc.element.body:
             if isinstance(element, CT_SectPr):
@@ -298,6 +300,78 @@ class Composer(object):
                 pass
             else:
                 self.add_styles(doc, el)
+
+    def retain_formatting_from_default_styles(self, doc):
+        """"""
+        if not self.preserve_styles:
+            return
+        style_id_name_mapping = {s.style_id: s.name for s in doc.styles}
+        for style_type in WD_STYLE_TYPE:
+            # Currently we only support retaining paragraph styles
+            if style_type != WD_STYLE_TYPE.PARAGRAPH:
+                continue
+            style = doc.styles.default(style_type)
+            if style is not None:
+                our_style = self.doc.styles.default(style_type)
+                if not xml_elements_equal(our_style.element, style.element):
+                    if style_type == WD_STYLE_TYPE.PARAGRAPH:
+                        # Get formattings from the style's run properties
+                        run_properties = xpath(style.element, ".//w:rPr/*")
+                        if run_properties:
+                            # If the run doesn't have run propertes (<w:rPr>),
+                            # we need to add them
+                            for el in xpath(doc.element, ".//w:r[not(w:rPr)]"):
+                                r_pr_element = parse_xml(
+                                    '<w:rPr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>'
+                                )
+                                el.insert(0, r_pr_element)
+                            # For every run property without a style, we add the
+                            # formattings from the default style.
+                            for el in xpath(doc.element, ".//w:rPr[not(w:rStyle)]"):
+                                # Figure out formattings defined in a style
+                                # from a parent element as we should not add these.
+                                parent = el.getparent()
+                                while parent is not None:
+                                    style_ids = xpath(parent, "*/w:pStyle/@w:val")
+                                    if style_ids:
+                                        break
+                                    parent = parent.getparent()
+                                formattings_from_style = []
+                                for style_id in style_ids:
+                                    thestyle = doc.styles[
+                                        style_id_name_mapping[style_id]
+                                    ]
+                                    formattings_from_style = xpath(
+                                        thestyle.element, "w:rPr/*|w:pPr/*"
+                                    )
+                                for run_property in run_properties:
+                                    if not any(
+                                        [
+                                            f.tag == run_property.tag
+                                            for f in formattings_from_style
+                                        ]
+                                    ):
+                                        el.append(deepcopy(run_property))
+                        # Get formattings from the style's paragraph properties
+                        paragraph_properties = xpath(style.element, ".//w:pPr/*")
+                        if paragraph_properties:
+                            # If the paragraph doesn't have paragraph propertes
+                            # (<w:pPr>), we need to add them
+                            for el in xpath(doc.element, ".//w:p[not(w:pPr)]"):
+                                p_pr_element = parse_xml(
+                                    '<w:pPr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>'
+                                )
+                                el.insert(0, p_pr_element)
+                            # For every paragraph property without a style, we add the
+                            # formattings from the default style.
+                            for el in xpath(doc.element, ".//w:pPr[not(w:pStyle)]"):
+                                existing_tags = set(
+                                    [child.tag for child in el.getchildren()]
+                                )
+                                for paragraph_property in paragraph_properties:
+                                    if paragraph_property.tag in existing_tags:
+                                        continue
+                                    el.append(deepcopy(paragraph_property))
 
     def add_styles(self, doc, element):
         """Add styles from the given document used in the given element."""
