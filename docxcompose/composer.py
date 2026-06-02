@@ -365,7 +365,12 @@ class Composer(object):
                             # For every paragraph property without a style, we add the
                             # formattings from the default style.
                             for el in xpath(doc.element, ".//w:pPr[not(w:pStyle)]"):
+                                existing_tags = set(
+                                    [child.tag for child in el.getchildren()]
+                                )
                                 for paragraph_property in paragraph_properties:
+                                    if paragraph_property.tag in existing_tags:
+                                        continue
                                     el.append(deepcopy(paragraph_property))
 
     def add_styles(self, doc, element):
