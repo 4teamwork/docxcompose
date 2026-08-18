@@ -9,7 +9,7 @@ concurrency:
 
 jobs:
   lint:
-    runs-on: self-hosted
+    runs-on: lotus-arc
     steps:
       - name: Checkout
         uses: actions/checkout@v3
