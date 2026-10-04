@@ -1,5 +1,9 @@
 import pytest
 from docx import Document
+from docx.enum.style import WD_STYLE_TYPE
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
+from docx.styles.styles import Styles
 from utils import ComparableDocument
 from utils import ComposedDocument
 from utils import docx_path
@@ -109,6 +113,74 @@ def test_retain_formatting_from_default_styles():
     composed = ComparableDocument(composer.doc)
     expected = FixtureDocument("styles_default.docx")
     assert composed == expected
+
+
+@pytest.mark.parametrize("preserve_styles", [False, True])
+def test_style_enumerations_do_not_scale_with_paragraph_count(
+    monkeypatch, preserve_styles
+):
+    original_iter = Styles.__iter__
+    target = {"element": None, "enumerations": 0}
+
+    def counted_iter(styles):
+        if styles.element is target["element"]:
+            target["enumerations"] += 1
+        return original_iter(styles)
+
+    monkeypatch.setattr(Styles, "__iter__", counted_iter)
+    counts = []
+    for paragraph_count in (1, 30):
+        master = Document()
+        source = Document()
+        for _ in range(paragraph_count):
+            source.add_paragraph("Repeated heading", style="Heading 1")
+        target.update(element=master.styles.element, enumerations=0)
+        Composer(master, preserve_styles=preserve_styles).append(source)
+        counts.append(target["enumerations"])
+    assert counts[0] == counts[1]
+
+
+@pytest.mark.parametrize(
+    "preserve_styles,same_paragraph", [(False, True), (False, False), (True, False)]
+)
+def test_linked_styles_are_not_duplicated(preserve_styles, same_paragraph):
+    source = Document()
+    paragraph_style = source.styles.add_style("Imported", WD_STYLE_TYPE.PARAGRAPH)
+    character_style = source.styles.add_style("ImportedChar", WD_STYLE_TYPE.CHARACTER)
+    link = OxmlElement("w:link")
+    link.set(qn("w:val"), character_style.style_id)
+    paragraph_style.element.append(link)
+    paragraph = source.add_paragraph(style=paragraph_style)
+    if not same_paragraph:
+        paragraph = source.add_paragraph()
+    paragraph.add_run("Linked style").style = character_style
+
+    composer = Composer(Document(), preserve_styles=preserve_styles)
+    composer.append(source)
+    ids = [style.style_id for style in composer.doc.styles]
+    assert ids.count("Imported") == 1
+    assert ids.count("ImportedChar") == 1
+    assert composer.doc.paragraphs[0].style.style_id == "Imported"
+    assert composer.doc.paragraphs[-1].runs[0].style.style_id == "ImportedChar"
+
+
+@pytest.mark.parametrize("preserve_styles", [False, True])
+def test_styles_added_to_master_between_appends_are_seen(preserve_styles):
+    composer = Composer(Document(), preserve_styles=preserve_styles)
+    composer.append(Document())
+    master_style = composer.doc.styles.add_style("External", WD_STYLE_TYPE.PARAGRAPH)
+    master_style.font.italic = True
+    source = Document()
+    source_style = source.styles.add_style("External", WD_STYLE_TYPE.PARAGRAPH)
+    source_style.font.bold = True
+    source.add_paragraph("External style", style=source_style)
+
+    composer.append(source)
+    ids = [style.style_id for style in composer.doc.styles]
+    assert ids.count("External") == 1
+    assert composer.doc.styles["External"].font.italic is True
+    expected_id = "External_1" if preserve_styles else "External"
+    assert composer.doc.paragraphs[-1].style.style_id == expected_id
 
 
 @pytest.fixture

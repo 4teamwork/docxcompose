@@ -291,6 +291,7 @@ class Composer(object):
         # Thus we map the style id using the style name.
         self._style_id2name = {s.style_id: s.name for s in doc.styles}
         self._style_name2id = {s.name: s.style_id for s in self.doc.styles}
+        self._style_ids = {s.style_id for s in self.doc.styles}
 
     def add_styles_from_other_parts(self, doc):
         for reltype in PART_RELTYPES_WITH_STYLES:
@@ -375,7 +376,7 @@ class Composer(object):
 
     def add_styles(self, doc, element):
         """Add styles from the given document used in the given element."""
-        our_style_ids = [s.style_id for s in self.doc.styles]
+        our_style_ids = self._style_ids
         # de-duplicate ids and keep order to make sure tests are not flaky
         used_style_ids = list(
             OrderedDict.fromkeys(
@@ -423,6 +424,7 @@ class Composer(object):
                         if new_name is not None:
                             style_element.name.val = new_name
                         self.doc.styles.element.append(style_element)
+                        our_style_ids.add(new_id)
                         self.add_numberings(doc, style_element)
                         self.add_linked_styles(doc, style_element)
                         self._current_preserved_styles[our_style_id] = new_id
@@ -438,6 +440,7 @@ class Composer(object):
                 style_element = deepcopy(doc.styles.element.get_by_id(style_id))
                 if style_element is not None:
                     self.doc.styles.element.append(style_element)
+                    our_style_ids.add(style_element.styleId)
                     self.add_numberings(doc, style_element)
                     self.add_linked_styles(doc, style_element)
             else:
@@ -480,19 +483,18 @@ class Composer(object):
                 )
                 for el in style_elements:
                     el.val = our_style_id
-            # Update our style ids
-            our_style_ids = [s.style_id for s in self.doc.styles]
 
     def add_linked_styles(self, doc, element):
         linked_style_ids = xpath(element, ".//w:link/@w:val")
         if linked_style_ids:
             linked_style_id = linked_style_ids[0]
             our_linked_style_id = self.mapped_style_id(linked_style_id)
-            our_style_ids = [s.style_id for s in self.doc.styles]
+            our_style_ids = self._style_ids
             if our_linked_style_id not in our_style_ids:
                 our_linked_style = doc.styles.element.get_by_id(linked_style_id)
                 if our_linked_style is not None:
                     self.doc.styles.element.append(deepcopy(our_linked_style))
+                    our_style_ids.add(our_linked_style.styleId)
 
     def add_numberings(self, doc, element):
         """Add numberings from the given document used in the given element."""
