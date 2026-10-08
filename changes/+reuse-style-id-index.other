@@ -1,0 +1,1 @@
+Reuse a style ID set during document import instead of enumerating the target styles for each element and style reference.
