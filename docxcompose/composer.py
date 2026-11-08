@@ -199,25 +199,30 @@ class Composer(object):
 
     def add_images(self, doc, element):
         """Add images from the given document used in the given element."""
+        self.add_part_images(doc.part, self.doc.part, element)
+
+    def add_part_images(self, src_part, dst_part, element):
+        """Add images that the given element, copied from src_part to
+        dst_part, refers to through src_part's relationships."""
         blips = xpath(element, "(.//a:blip|.//asvg:svgBlip)[@r:embed]")
         for blip in blips:
             rid = blip.get("{%s}embed" % NS["r"])
-            img_part = doc.part.rels[rid].target_part
+            img_part = src_part.rels[rid].target_part
 
             new_img_part = self.pkg.image_parts._get_by_sha1(img_part.sha1)
             if new_img_part is None:
                 image = ImageWrapper(img_part)
                 new_img_part = self.pkg.image_parts._add_image_part(image)
 
-            new_rid = self.doc.part.relate_to(new_img_part, RT.IMAGE)
+            new_rid = dst_part.relate_to(new_img_part, RT.IMAGE)
             blip.set("{%s}embed" % NS["r"], new_rid)
 
             # handle external reference as images can be embedded and have an
             # external reference
             rid = blip.get("{%s}link" % NS["r"])
             if rid:
-                rel = doc.part.rels[rid]
-                new_rel = self.add_relationship(None, self.doc.part, rel)
+                rel = src_part.rels[rid]
+                new_rel = self.add_relationship(None, dst_part, rel)
                 blip.set("{%s}link" % NS["r"], new_rel.rId)
 
     def add_shapes(self, doc, element):
@@ -242,6 +247,7 @@ class Composer(object):
             return
 
         footnote_part = doc.part.rels.part_with_reltype(RT.FOOTNOTES)
+        src_footnotes = parse_xml(footnote_part.blob)
 
         my_footnote_part = self.footnote_part()
 
@@ -250,14 +256,19 @@ class Composer(object):
 
         for ref in footnotes_refs:
             id_ = ref.get("{%s}id" % NS["w"])
-            element = parse_xml(footnote_part.blob)
-            footnote = deepcopy(element.find('.//w:footnote[@w:id="%s"]' % id_, NS))
+            footnote = deepcopy(
+                src_footnotes.find('.//w:footnote[@w:id="%s"]' % id_, NS)
+            )
             footnotes.append(footnote)
             footnote.set("{%s}id" % NS["w"], str(next_id))
             ref.set("{%s}id" % NS["w"], str(next_id))
             next_id += 1
 
-        self.add_referenced_parts(footnote_part, my_footnote_part, element)
+            # The copy refers to hyperlinks and images through the source
+            # footnotes part's relationship ids: add the relationships to our
+            # footnotes part and point the copy at them.
+            self.add_referenced_parts(footnote_part, my_footnote_part, footnote)
+            self.add_part_images(footnote_part, my_footnote_part, footnote)
 
         my_footnote_part._blob = serialize_part_xml(footnotes)
 
